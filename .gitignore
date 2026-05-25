@@ -1,0 +1,8 @@
+node_modules/
+.env
+*.log
+history.json
+schedules.json
+users.json
+package-lock.json
+.vscode/
