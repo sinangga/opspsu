@@ -39,9 +39,7 @@ function loadUsers() { if (fs.existsSync('users.json')) { try { verifiedUsers = 
 
 // ================= AUTH FUNCTIONS =================
 function isAllowed(msg) {
-    const from = msg.from || msg;
-    if (!from || !from.username) return false;
-    return ALLOWED_USERNAMES.includes(from.username.toLowerCase());
+    return true;
 }
 
 function isAuthenticated(userId) {
