@@ -30,6 +30,15 @@ if df.empty:
     print("Error: No valid data available for windrose.")
     sys.exit(1)
 
+# Calculate summary
+max_speed = df[speed_col].max()
+# Calculate dominant direction
+bins = np.arange(0, 360 + 45, 45)
+df['sector'] = pd.cut(df[dir_col], bins=bins, labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"], ordered=False)
+# Handle 360 degrees as North
+df['sector'] = df['sector'].replace("N", "N")
+dominant_dir = df['sector'].mode()[0]
+
 # Create Windrose
 ax = WindroseAxes.from_ax()
 ax.bar(df[dir_col], df[speed_col], normed=True, opening=0.8, edgecolor='white')
@@ -38,3 +47,4 @@ ax.set_legend(title="Speed (m/s)", loc='best')
 plt.savefig(output_file)
 plt.close() # Close figure to free memory
 print(f"Saved to {output_file}")
+print(f"Summary: Dominant={dominant_dir}, MaxSpeed={max_speed:.1f}")

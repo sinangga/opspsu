@@ -208,10 +208,15 @@ async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
             fs.writeFileSync('temp_data.csv', res.data);
             await updateStatus("Generating image via Python...");
             const { execSync } = require('child_process');
+            let output;
             try {
-                execSync(`python generate_windrose.py temp_data.csv windrose.png`);
+                output = execSync(`python generate_windrose.py temp_data.csv windrose.png`).toString();
             } catch (err) {
                 throw new Error("Python script failed: " + err.message);
+            }
+            const summaryMatch = output.match(/Summary: Dominant=(.*), MaxSpeed=(.*)/);
+            if (summaryMatch) {
+                caption += `\n\n💨 *Summary:*\n- 🧭 Dominan: *${summaryMatch[1]}*\n- ⚡ Max: *${summaryMatch[2]} m/s*`;
             }
             return { photoBuffer: fs.readFileSync('windrose.png'), caption };
         } else if (type === '🌡 T-Td-RH') {            const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), tdI = getI('dewpoint_avg_60');
