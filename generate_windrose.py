@@ -26,6 +26,10 @@ df[speed_col] = pd.to_numeric(df[speed_col], errors='coerce')
 # Drop missing values
 df = df.dropna(subset=[dir_col, speed_col])
 
+if df.empty:
+    print("Error: No valid data available for windrose.")
+    sys.exit(1)
+
 # Create Windrose
 ax = WindroseAxes.from_ax()
 ax.bar(df[dir_col], df[speed_col], normed=True, opening=0.8, edgecolor='white')

@@ -208,7 +208,11 @@ async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
             fs.writeFileSync('temp_data.csv', res.data);
             await updateStatus("Generating image via Python...");
             const { execSync } = require('child_process');
-            execSync(`python generate_windrose.py temp_data.csv windrose.png`);
+            try {
+                execSync(`python generate_windrose.py temp_data.csv windrose.png`);
+            } catch (err) {
+                throw new Error("Python script failed: " + err.message);
+            }
             return { photoBuffer: fs.readFileSync('windrose.png'), caption };
         } else if (type === '🌡 T-Td-RH') {            const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), tdI = getI('dewpoint_avg_60');
             const lbls = [], tD = [], tdD = [], hD = [];
@@ -311,7 +315,7 @@ bot.on('callback_query', async (q) => {
         const [_, __, y, m] = data.split('_');
         bot.editMessageText('Select Date:', { chat_id: cid, message_id: q.message.message_id, reply_markup: createCalendarKeyboard(parseInt(y), parseInt(m)) });
     } else if (data.startsWith('cal_set_')) {
-        const dStr = data.split('_')[2], mode = (sessions[cid] || {}).mode || 'ikhtisar_date';
+        const dStr = data.substring(8), mode = (sessions[cid] || {}).mode || 'ikhtisar_date';
         bot.answerCallbackQuery(q.id); bot.deleteMessage(cid, q.message.message_id);
         const ldr = await bot.sendMessage(cid, `⏳ *Memproses data untuk ${dStr}...*`, { parse_mode: 'Markdown' });
         if (mode === 'ikhtisar_date') {
@@ -319,7 +323,7 @@ bot.on('callback_query', async (q) => {
             if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); if (res.rawData) { await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${dStr}.csv`, contentType: 'text/csv' }); } bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
         } else {
             const res = await generateGraphData((sessions[cid]||{}).chartType, dStr, cid, ldr.message_id);
-            if (res.photoUrl) { await bot.sendPhoto(cid, res.photoUrl, { caption: res.caption, parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Grafik Berhasil Dibuat.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); }
+            if (res.photoBuffer) { await bot.sendPhoto(cid, res.photoBuffer, { caption: res.caption, parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Grafik Berhasil Dibuat.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); }
             else bot.sendMessage(cid, res.report || 'Error', { parse_mode: 'Markdown', ...backSubMenu('Graph') });
         }
         delete sessions[cid];
