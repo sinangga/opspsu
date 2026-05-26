@@ -33,10 +33,11 @@ if df.empty:
 # Calculate summary
 max_speed = df[speed_col].max()
 # Calculate dominant direction
-bins = np.arange(0, 360 + 45, 45)
-df['sector'] = pd.cut(df[dir_col], bins=bins, labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"], ordered=False)
-# Handle 360 degrees as North
-df['sector'] = df['sector'].replace("N", "N")
+# 8 sectors for 360 degrees: N, NE, E, SE, S, SW, W, NW
+# Edges: 0, 45, 90, 135, 180, 225, 270, 315, 360
+bins = [0, 22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5, 360]
+labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"]
+df['sector'] = pd.cut(df[dir_col], bins=bins, labels=labels, ordered=False)
 dominant_dir = df['sector'].mode()[0]
 
 # Create Windrose
