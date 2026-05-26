@@ -31,7 +31,8 @@ if df.empty:
     sys.exit(1)
 
 # Calculate summary
-max_speed = df[speed_col].max()
+max_speed_ms = df[speed_col].max()
+max_speed_kt = max_speed_ms * 1.94384
 # Calculate dominant direction
 # 8 sectors for 360 degrees: N, NE, E, SE, S, SW, W, NW
 # Edges: 0, 45, 90, 135, 180, 225, 270, 315, 360
@@ -48,4 +49,4 @@ ax.set_legend(title="Speed (m/s)", loc='best')
 plt.savefig(output_file)
 plt.close() # Close figure to free memory
 print(f"Saved to {output_file}")
-print(f"Summary: Dominant={dominant_dir}, MaxSpeed={max_speed:.1f}")
+print(f"Summary: Dominant={dominant_dir}, MaxSpeed={max_speed_kt:.1f}")

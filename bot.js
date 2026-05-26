@@ -216,7 +216,7 @@ async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
             }
             const summaryMatch = output.match(/Summary: Dominant=(.*), MaxSpeed=(.*)/);
             if (summaryMatch) {
-                caption += `\n\n💨 *Summary:*\n- 🧭 Dominan: *${summaryMatch[1]}*\n- ⚡ Max: *${summaryMatch[2]} m/s*`;
+                caption += `\n\n💨 *Summary:*\n- 🧭 Dominan: *${summaryMatch[1]}*\n- ⚡ Max: *${summaryMatch[2]} KT*`;
             }
             return { photoBuffer: fs.readFileSync('windrose.png'), caption };
         } else if (type === '🌡 T-Td-RH') {            const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), tdI = getI('dewpoint_avg_60');
