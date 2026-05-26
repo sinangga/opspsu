@@ -43,7 +43,7 @@ dominant_dir = df['sector'].mode()[0]
 
 # Create Windrose
 ax = WindroseAxes.from_ax()
-ax.bar(df[dir_col], df[speed_col], normed=True, opening=0.8, edgecolor='white')
+ax.bar(df[dir_col], df[speed_col], normed=True, opening=0.8, edgecolor='white', nsector=8)
 ax.set_legend(title="Speed (m/s)", loc='best')
 
 plt.savefig(output_file)
