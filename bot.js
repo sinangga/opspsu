@@ -181,13 +181,24 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
 }
 
 async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
+    const updateStatus = async (status) => {
+        if (loaderMsgId) {
+            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            try { await bot.editMessageText(`⏳ *GENERATE ${type.toUpperCase()}*\n\`[${time}] ${status}\``, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' }); } catch (e) {}
+        }
+    };
+
     try {
-        if (loaderMsgId) await bot.editMessageText(`⏳ *[1/2] Fetching:* Gathering dataset for ${type}...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+        await updateStatus("Authenticating...");
         const lRes = await axios.post(`${REALTIME_URL}/api/login`, { username: REALTIME_USER, password: REALTIME_PASS }, { timeout: 5000 });
-        const res = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, { headers: { 'Authorization': `Bearer ${lRes.data.data.accessToken}` }, timeout: 30000 });
-        if (loaderMsgId) await bot.editMessageText(`⏳ *[2/2] Generating:* Building visual chart...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
         
-        const lines = res.data.trim().split(/\r?\n/); if (lines.length < 2) return { report: "❌ *ERROR:* No data records found." };
+        await updateStatus(`Downloading ${dateStr}.csv...`);
+        const res = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, { headers: { 'Authorization': `Bearer ${lRes.data.data.accessToken}` }, timeout: 30000 });
+        
+        await updateStatus("Processing data...");
+        const lines = res.data.trim().split(/\r?\n/); 
+        if (lines.length < 2) throw new Error("Dataset is empty");
+        
         const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
         const rows = lines.slice(1).map(l => l.split(d)), getI = (n) => h.indexOf(n);
         const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
@@ -195,57 +206,33 @@ async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
         let config = {}, caption = `📊 *ANALISA ${type.toUpperCase()} - ${dateStr}*`;
 
         if (type === '💨 Windrose') {
-            const wdI = getI('wind_direction_prevailing_60'), sectors = ["N","NE","E","SE","S","SW","W","NW"], freqs = new Array(8).fill(0);
-            rows.forEach(r => { 
-                const v = cl(r[wdI]); 
-                if (!isNaN(v)) {
-                    let idx = Math.floor(((v + 22.5) % 360) / 45);
-                    freqs[idx]++;
-                }
-            });
-            const domIdx = freqs.indexOf(Math.max(...freqs));
-            caption += `\n\n💨 *Arah Angin Dominan: ${sectors[domIdx]} (${(domIdx * 45).toFixed(0)}°)*`;
-            
-            config = { 
-                type: 'polarArea', 
-                data: { 
-                    labels: sectors, 
-                    datasets: [{ 
-                        label: 'Wind Frequency', 
-                        data: freqs, 
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 
-                            'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
-                            'rgba(201, 203, 207, 0.7)', 'rgba(0, 200, 150, 0.7)'
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }] 
-                },
-                options: {
-                    startAngle: -0.5 * Math.PI - (Math.PI / 8), // Centering N sector at top (rotating by -22.5 deg)
-                    legend: { position: 'right' },
-                    scale: {
-                        ticks: { display: false, beginAtZero: true },
-                        gridLines: { color: 'rgba(0, 0, 0, 0.1)' },
-                        angleLines: { display: true, color: 'rgba(0, 0, 0, 0.1)' }
-                    }
-                }
-            };
-        } else if (type === '🌡 T-Td-RH') {
-            const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), tdI = getI('dewpoint_avg_60');
+            await updateStatus("Saving data for Python script...");
+            fs.writeFileSync('temp_data.csv', res.data);
+            await updateStatus("Generating image via Python...");
+            const { execSync } = require('child_process');
+            execSync(`python generate_windrose.py temp_data.csv windrose.png`);
+            return { photoBuffer: fs.readFileSync('windrose.png'), caption };
+        } else if (type === '🌡 T-Td-RH') {            const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), tdI = getI('dewpoint_avg_60');
             const lbls = [], tD = [], tdD = [], hD = [];
             rows.forEach((r, i) => { if (i % 60 === 0) { const ts = new Date(r[0]*1000); lbls.push(ts.toISOString().substr(11, 5)); tD.push(cl(r[tI])); tdD.push(cl(r[tdI])); hD.push(cl(r[hI])); } });
-            config = { type: 'line', data: { labels: lbls, datasets: [{ label: 'Temp', data: tD, borderColor: 'red', fill: false }, { label: 'Td', data: tdD, borderColor: 'green', fill: false }, { label: 'RH', data: hD, borderColor: 'blue', fill: false }] } };
+            config = { type: 'line', data: { labels: lbls, datasets: [{ label: 'Temp', data: tD, borderColor: 'red' }, { label: 'Td', data: tdD, borderColor: 'green' }, { label: 'RH', data: hD, borderColor: 'blue' }] } };
         } else if (type === '🌧 Rainfall') {
             const rI = getI('precipitation_accum_3600'), lbls = [], rD = []; let tot = 0;
             rows.forEach(r => { const ts = new Date(r[0]*1000); if (ts.getUTCMinutes() === 59) { const v = cl(r[rI])||0; lbls.push(ts.toISOString().substr(11, 5)); rD.push(v); tot += v; } });
-            caption += `\n\n🌧 *Total Hujan: ${tot.toFixed(1)} mm*`;
+            caption += `\n\n🌧 *Total: ${tot.toFixed(1)} mm*`;
             config = { type: 'bar', data: { labels: lbls, datasets: [{ label: 'Rain (mm)', data: rD, backgroundColor: 'blue' }] } };
         }
-        const url = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(config))}&width=800&height=400&backgroundColor=white&version=2`;
-        return { photoUrl: url, caption };
-    } catch (e) { return { report: "❌ *ERROR:* " + e.message }; }
+
+        await updateStatus("Rendering...");
+        const url = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(config))}&width=800&height=800&version=2`;
+
+        const imgRes = await axios.get(url, { responseType: 'arraybuffer', timeout: 20000 });
+        await updateStatus("Uploading...");
+        return { photoBuffer: imgRes.data, caption };
+    } catch (e) { 
+        await updateStatus(`❌ FAIL: ${e.message}`);
+        return { report: `❌ *ERROR:* ${e.message}` }; 
+    }
 }
 
 // ================= SCHEDULER =================
@@ -410,7 +397,13 @@ bot.on('message', async (msg) => {
     else if ((session.mode === 'ikhtisar_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
         const d = text.match(/\((.*?)\)/)[1], ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
         if (session.mode === 'ikhtisar_date') { const res = await generateIkhtisar(d, cid, ldr.message_id); if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); if (res.rawData) await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${d}.csv`, contentType: 'text/csv' }); bot.sendMessage(cid, '✅ *Proses Ikhtisar Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); } }
-        else { const res = await generateGraphData(session.chartType, d, cid, ldr.message_id); if (res.photoUrl) { await bot.sendPhoto(cid, res.photoUrl, { caption: res.caption, parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Grafik Siap.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); } else bot.sendMessage(cid, res.report || 'Error', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); }
+        else { 
+            const res = await generateGraphData(session.chartType, d, cid, ldr.message_id); 
+            if (res.photoBuffer) { 
+                await bot.sendPhoto(cid, res.photoBuffer, { caption: res.caption, parse_mode: 'Markdown' }); 
+                bot.sendMessage(cid, '✅ *Grafik Siap.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); 
+            } else bot.sendMessage(cid, res.report || 'Error', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); 
+        }
         delete sessions[cid];
     } else if (text === '📅 Open Calendar') { bot.sendMessage(cid, '📅 *Pilih Tanggal:*', { parse_mode: 'Markdown', reply_markup: createCalendarKeyboard(new Date().getFullYear(), new Date().getMonth()) }); }
     if (text === '❌ Cancel') { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Operasi Dibatalkan.*', { parse_mode: 'Markdown', ...mainMenu() }); }
