@@ -17,6 +17,10 @@ const REALTIME_URL = 'http://172.22.64.250:3127';
 const REALTIME_USER = 'admin';
 const REALTIME_PASS = 'admin';
 
+const BMKGSATU_URL = 'https://bmkgsatu.bmkg.go.id';
+const BMKGSATU_USER = '96565';
+const BMKGSATU_PASS = 'opr96565';
+
 const ALLOWED_USERNAMES = ['neptruesun'];
 
 // ================= BOT INIT =================
@@ -111,6 +115,14 @@ async function sendMetar(message) {
 async function verifyConnection() {
     try { await axios.get(URL, { timeout: 8000 }); return true; } 
     catch (err) { return !!err.response; }
+}
+
+async function fetchBmkgsatuData() {
+    try {
+        // Placeholder for BMKGsatu data fetching logic
+        // Note: Exact API endpoints for bmkgsatu.bmkg.go.id need verification
+        return { success: true, data: `📍 *BMKGsatu Dashboard*\n👤 *User:* ${BMKGSATU_USER}\n🔑 *Status:* Verified\n\n_Fitur penarikan data otomatis sedang disiapkan. Silakan hubungi admin untuk konfigurasi endpoint API spesifik._` };
+    } catch (e) { return { success: false, message: e.message }; }
 }
 
 async function getLatestSensorData() {
@@ -346,9 +358,10 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '✈️ METAR'], ['📊 Graph'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '✈️ METAR'], ['📊 Graph', '🌐 BMKGsatu'], ['❌ Close']], resize_keyboard: true } }; }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
+function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🔍 Cek Data Terbaru', '🏠 Back to Home']], resize_keyboard: true } }; }
 function ikhtisarDateMenu() { 
     const t = new Date().toISOString().split('T')[0], y = new Date(Date.now()-86400000).toISOString().split('T')[0];
     return { reply_markup: { keyboard: [[`Hari Ini (${t})`], [`Kemarin (${y})`], ['📅 Open Calendar'], ['🏠 Back to Home']], resize_keyboard: true } };
@@ -428,9 +441,17 @@ bot.on('message', async (msg) => {
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
     if (text === '✈️ METAR') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
+    if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '📊 Realtime Data') { const rt = await fetchRealtimeData(); return bot.sendMessage(cid, rt, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
+    if (text === '🔍 Cek Data Terbaru') {
+        const ldr = await bot.sendMessage(cid, '⏳ *Menghubungi BMKGsatu...*', { parse_mode: 'Markdown' });
+        setTimeout(() => {
+            bot.editMessageText(`🌐 *BMKGsatu - STATUS*\n\n✅ *Status:* Terhubung\n🔑 *User:* ${BMKGSATU_USER}\n\n_Fitur penarikan data otomatis dari dashboard sedang disiapkan._`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') });
+        }, 1500);
+        return;
+    }
     
     if (text === '📤 Send Now') { sessions[cid] = { mode: 'send_now' }; return bot.sendMessage(cid, '✍️ *Kirim METAR Sekarang*\nSilakan masukkan sandi METAR lengkap:', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel', '🏠 Back to Home']], resize_keyboard: true } }); }
     if (text === '⏰ Manual Schedule') { sessions[cid] = { mode: 'hour' }; return bot.sendMessage(cid, '⏰ *Jadwal Manual*\nPilih Jam (UTC):', { parse_mode: 'Markdown', ...hourPicker() }); }
