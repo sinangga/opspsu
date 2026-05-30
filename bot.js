@@ -128,7 +128,7 @@ async function fetchRealtimeData() {
     const raw = data.raw_data;
     let rh = raw.humidity;
     if (!rh || isNaN(rh)) rh = 100 * Math.pow((112 - 0.1 * raw.temperature + raw.dewpoint) / (112 + 0.9 * raw.temperature), 8);
-    return `🏛️ *DIGITALISASI BMKG*\n\n📊 *REALTIME DATA SENSOR*\n\n📝 *METAR TEXT:*\n\`${data.metar_text}\`\n\n📍 *Station:* ${raw.icao_id}\n🌡 *Temp:* ${raw.temperature.toFixed(1)}°C\n💧 *Dewpoint:* ${raw.dewpoint.toFixed(1)}°C\n🌫 *Humidity:* ${Math.round(rh)}%\n💨 *Wind:* ${raw.wind_dir}° / ${raw.wind_speed.toFixed(1)} KT\n📉 *Pressure:* QNH ${Math.round(raw.qnh)} / QFE ${Math.round(raw.qfe)} hPa\n\n🕒 *Last Update:*\n${new Date(data.timestamp).toLocaleString('en-GB', {timeZone: 'UTC'})} UTC`;
+    return `🏛️ *DIGITALISASI BMKG*\n\n📊 *REALTIME DATA SENSOR*\n\n📝 *METAR TEXT:*\n\`${data.metar_text}\`\n\n📍 *Station:* ${raw.icao_id}\n🌡 *Temp:* ${raw.temperature.toFixed(1)}°C\n💧 *Dewpoint:* ${raw.dewpoint.toFixed(1)}°C\n🌫 *Humidity:* ${Math.round(rh)}%\n💨 *Wind:* ${raw.wind_dir}° / ${raw.wind_speed.toFixed(1)} KT\n📉 *Pressure:* QNH ${Math.floor(raw.qnh)} / QFE ${Math.floor(raw.qfe)} hPa\n\n🕒 *Last Update:*\n${new Date(data.timestamp).toLocaleString('en-GB', {timeZone: 'UTC'})} UTC`;
 }
 
 // ================= DATA PROCESSING =================
@@ -254,7 +254,7 @@ function registerSchedule(item) {
                 const r = s.raw_data, day = new Date().getUTCDate().toString().padStart(2, '0'), time = String(item.hour).padStart(2,'0')+String(item.minute).padStart(2,'0');
                 const w = r.wind_speed < 0.5 ? '00000KT' : `${String(Math.round(r.wind_dir||0)).padStart(3,'0')}${String(Math.round(r.wind_speed)).padStart(2,'0')}KT`;
                 const f = (v) => (Math.round(v)<0?'M':'')+Math.abs(Math.round(v)).toString().padStart(2,'0');
-                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${Math.round(r.qnh||1013).toString().padStart(4,'0')} NOSIG=`;
+                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${Math.floor(r.qnh||1013).toString().padStart(4,'0')} NOSIG=`;
             } else {
                 bot.sendMessage(item.chatId, `🚨 *SCHEDULE FAILED*\nCould not fetch sensor data for SMART METAR ID \`${item.id}\`.`, { parse_mode: 'Markdown' });
                 return;
