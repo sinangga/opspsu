@@ -118,7 +118,7 @@ async function getLatestSensorData() {
         const lRes = await axios.post(`${REALTIME_URL}/api/login`, { username: REALTIME_USER, password: REALTIME_PASS }, { timeout: 5000 });
         const token = lRes.data.data.accessToken;
         
-        // 1. Get latest METAR text from /api/code (usually updated every 30-60 mins)
+        // 1. Get latest METAR text from /api/code (usually updated every 30-60 mins)        
         const resCode = await axios.get(`${REALTIME_URL}/api/code`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 5000 });
         const codeData = resCode.data?.data?.[0] || {};
 
@@ -127,15 +127,22 @@ async function getLatestSensorData() {
         const resHist = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 10000 });
         
         const lines = resHist.data.trim().split(/\r?\n/);
-        if (lines.length < 2) return codeData; // Fallback if CSV empty
+        if (lines.length < 2) {
+            console.log('CSV empty, using codeData fallback');
+            return codeData;
+        }
 
         const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
         const lastRow = lines[lines.length - 1].split(d);
         const getI = (n) => h.indexOf(n);
-        const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
+        const cl = (v) => {
+            if (!v || v === '' || v === 'null') return NaN;
+            let n = parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
+            return isNaN(n) ? NaN : n;
+        };
 
         const raw = {
-            icao_id: codeData.raw_data?.icao_id || 'WAGL',
+            icao_id: codeData.raw_data?.icao_id || 'WIOP',
             temperature: cl(lastRow[getI('temperature_avg_60')]),
             dewpoint: cl(lastRow[getI('dewpoint_avg_60')]),
             humidity: cl(lastRow[getI('humidity_avg_60')]),
@@ -145,9 +152,14 @@ async function getLatestSensorData() {
             qfe: cl(lastRow[getI('qfe_avg_60')])
         };
 
+        // Final fallback to codeData values if CSV has NaNs for critical fields
+        if (isNaN(raw.temperature)) raw.temperature = codeData.raw_data?.temperature || 0;
+        if (isNaN(raw.dewpoint)) raw.dewpoint = codeData.raw_data?.dewpoint || 0;
+        if (isNaN(raw.qnh)) raw.qnh = codeData.raw_data?.qnh || 1013;
+
         return {
             metar_text: codeData.metar_text || 'NO RECENT METAR',
-            timestamp: parseInt(lastRow[0]) * 1000,
+            timestamp: (parseInt(lastRow[0]) || Date.now()/1000) * 1000,
             raw_data: raw
         };
     } catch (e) { console.log('FETCH ERR:', e.message); return null; }
@@ -159,7 +171,7 @@ async function fetchRealtimeData() {
     const raw = data.raw_data;
     let rh = raw.humidity;
     if (!rh || isNaN(rh)) rh = 100 * Math.pow((112 - 0.1 * raw.temperature + raw.dewpoint) / (112 + 0.9 * raw.temperature), 8);
-    return `🏛️ *DIGITALISASI BMKG*\n\n📊 *REALTIME DATA SENSOR*\n\n📝 *METAR TEXT:*\n\`${data.metar_text}\`\n\n📍 *Station:* ${raw.icao_id}\n🌡 *Temp:* ${raw.temperature.toFixed(1)}°C\n💧 *Dewpoint:* ${raw.dewpoint.toFixed(1)}°C\n🌫 *Humidity:* ${Math.round(rh)}%\n💨 *Wind:* ${raw.wind_dir}° / ${raw.wind_speed.toFixed(1)} KT\n📉 *Pressure:* QNH ${Math.floor(raw.qnh)} / QFE ${Math.floor(raw.qfe)} hPa\n\n🕒 *Last Update:*\n${new Date(data.timestamp).toLocaleString('en-GB', {timeZone: 'UTC'})} UTC`;
+    return `🏛️ *DIGITALISASI BMKG*\n\n📊 *REALTIME DATA SENSOR*\n\n📝 *METAR TEXT:*\n\`${data.metar_text}\`\n\n📍 *Station:* ${raw.icao_id}\n🌡 *Temp:* ${raw.temperature.toFixed(1)}°C\n💧 *Dewpoint:* ${raw.dewpoint.toFixed(1)}°C\n🌫 *Humidity:* ${Math.round(rh)}%\n💨 *Wind:* ${Math.round(raw.wind_dir||0)}° / ${raw.wind_speed.toFixed(1)} KT\n📉 *Pressure:* QNH ${Math.floor(raw.qnh||1013)} / QFE ${Math.floor(raw.qfe||1000)} hPa\n\n🕒 *Last Update:*\n${new Date(data.timestamp).toLocaleString('en-GB', {timeZone: 'UTC'})} UTC`;
 }
 
 // ================= DATA PROCESSING =================
@@ -280,14 +292,29 @@ function registerSchedule(item) {
         let isSmart = false;
         if (item.type === 'SMART') {
             isSmart = true;
+            console.log(`[SCHEDULE] Running SMART METAR for ID: ${item.id}`);
             const s = await getLatestSensorData();
-            if (s) {
-                const r = s.raw_data, day = new Date().getUTCDate().toString().padStart(2, '0'), time = String(item.hour).padStart(2,'0')+String(item.minute).padStart(2,'0');
-                const w = r.wind_speed < 0.5 ? '00000KT' : `${String(Math.round(r.wind_dir||0)).padStart(3,'0')}${String(Math.round(r.wind_speed)).padStart(2,'0')}KT`;
-                const f = (v) => (Math.round(v)<0?'M':'')+Math.abs(Math.round(v)).toString().padStart(2,'0');
-                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${Math.floor(r.qnh||1013).toString().padStart(4,'0')} NOSIG=`;
+            if (s && s.raw_data) {
+                const r = s.raw_data;
+                const day = new Date().getUTCDate().toString().padStart(2, '0');
+                const time = String(item.hour).padStart(2,'0')+String(item.minute).padStart(2,'0');
+                
+                // Wind logic: Calm if < 1 KT
+                const wDir = Math.round(r.wind_dir || 0);
+                const wSpd = Math.round(r.wind_speed || 0);
+                const w = wSpd < 1 ? '00000KT' : `${String(wDir % 360).padStart(3,'0')}${String(wSpd).padStart(2,'0')}KT`;
+                
+                const f = (v) => {
+                    const rv = Math.round(v || 0);
+                    return (rv < 0 ? 'M' : '') + Math.abs(rv).toString().padStart(2, '0');
+                };
+
+                const qnh = Math.floor(r.qnh || 1013);
+                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${qnh.toString().padStart(4,'0')} NOSIG=`;
+                console.log(`[SCHEDULE] Generated METAR: ${msg.replace(/\n/g, ' ')}`);
             } else {
-                bot.sendMessage(item.chatId, `🚨 *SCHEDULE FAILED*\nCould not fetch sensor data for SMART METAR ID \`${item.id}\`.`, { parse_mode: 'Markdown' });
+                console.error(`[SCHEDULE] FAILED to fetch sensor data for ID: ${item.id}`);
+                bot.sendMessage(item.chatId, `🚨 *SCHEDULE FAILED*\nCould not fetch sensor data for SMART METAR ID \`${item.id}\` at ${item.hour}:${item.minute} UTC.`, { parse_mode: 'Markdown' });
                 return;
             }
         }
