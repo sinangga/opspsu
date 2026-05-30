@@ -117,9 +117,40 @@ async function getLatestSensorData() {
     try {
         const lRes = await axios.post(`${REALTIME_URL}/api/login`, { username: REALTIME_USER, password: REALTIME_PASS }, { timeout: 5000 });
         const token = lRes.data.data.accessToken;
-        const res = await axios.get(`${REALTIME_URL}/api/code`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 5000 });
-        return res.data?.data?.[0] || null;
-    } catch (e) { return null; }
+        
+        // 1. Get latest METAR text from /api/code (usually updated every 30-60 mins)
+        const resCode = await axios.get(`${REALTIME_URL}/api/code`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 5000 });
+        const codeData = resCode.data?.data?.[0] || {};
+
+        // 2. Get latest minute-by-minute raw data from historical CSV
+        const dateStr = new Date().toISOString().split('T')[0];
+        const resHist = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 10000 });
+        
+        const lines = resHist.data.trim().split(/\r?\n/);
+        if (lines.length < 2) return codeData; // Fallback if CSV empty
+
+        const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
+        const lastRow = lines[lines.length - 1].split(d);
+        const getI = (n) => h.indexOf(n);
+        const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
+
+        const raw = {
+            icao_id: codeData.raw_data?.icao_id || 'WAGL',
+            temperature: cl(lastRow[getI('temperature_avg_60')]),
+            dewpoint: cl(lastRow[getI('dewpoint_avg_60')]),
+            humidity: cl(lastRow[getI('humidity_avg_60')]),
+            wind_dir: cl(lastRow[getI('wind_direction_prevailing_60')]),
+            wind_speed: cl(lastRow[getI('wind_speed_avg_60')]) * 1.94384, // convert m/s to KT
+            qnh: cl(lastRow[getI('qnh_avg_60')]),
+            qfe: cl(lastRow[getI('qfe_avg_60')])
+        };
+
+        return {
+            metar_text: codeData.metar_text || 'NO RECENT METAR',
+            timestamp: parseInt(lastRow[0]) * 1000,
+            raw_data: raw
+        };
+    } catch (e) { console.log('FETCH ERR:', e.message); return null; }
 }
 
 async function fetchRealtimeData() {
