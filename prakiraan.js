@@ -191,11 +191,11 @@ async function generatePrakiraanImages() {
             .header-text h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; }
             .header-text h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
             .period-box {
-                margin-top: 12px; display: inline-flex; align-items: center; gap: 10px; 
-                font-size: 26px; font-weight: 900; background: #fbbf24; 
-                color: #0f172a; padding: 10px 24px; border-radius: 15px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                border: 2px solid #ffffff;
+                margin-top: 10px; display: inline-flex; align-items: center; 
+                font-size: 20px; font-weight: 800; background: rgba(255, 255, 255, 0.95); 
+                color: #1e40af; padding: 6px 18px; border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                border: 1px solid rgba(255,255,255,0.5);
             }
             .header-right { display: flex; align-items: center; }
             .evp-logo { height: 75px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
@@ -239,8 +239,7 @@ async function generatePrakiraanImages() {
                     <h1>BMKG - Stasiun Meteorologi Pangsuma</h1>
                     <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
                     <div class="period-box">
-                    <span>Berlaku</span>
-                    <span style="color: #bae6fd;">${dateLabel}</span>
+                    <span>${dateLabel}</span>
                     </div>
                 </div>
               </div>
