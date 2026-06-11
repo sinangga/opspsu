@@ -146,8 +146,7 @@ async function generatePrakiraanImages() {
                 cuaca: slice.map(s => ({ text: s.weather_desc, icon: getBase64Icon(s.weather_desc) })),
                 suhu: `${Math.min(...suhu)}-${Math.max(...suhu)}°C`,
                 rh: `${Math.min(...rh)}-${Math.max(...rh)}%`,
-                arah: toIndoWind(mode(wd)),
-                angin: `${Math.round(Math.max(...ws))} KT`
+                angin: `${toIndoWind(mode(wd))} ${Math.round(Math.max(...ws))} KT`
             });
         }
 
@@ -253,8 +252,7 @@ async function generatePrakiraanImages() {
                       ${hoursHeader.map(h => `<th>${h}</th>`).join('')}
                       <th>SUHU</th>
                       <th>RH</th>
-                      <th>ANGIN</th>
-                      <th style="border-top-right-radius: 20px; border-right: none;">SPD</th>
+                      <th style="border-top-right-radius: 20px; border-right: none;">ANGIN</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -269,7 +267,6 @@ async function generatePrakiraanImages() {
                             </td>`).join('')}
                         <td class="td-value" style="color: #b91c1c;">${r.suhu}</td>
                         <td class="td-value" style="color: #1d4ed8;">${r.rh}</td>
-                        <td class="td-value">${r.arah}</td>
                         <td class="td-value" style="border-right: none;">${r.angin}</td>
                       </tr>
                     `).join('')}
