@@ -6,6 +6,7 @@ const schedule = require('node-schedule');
 const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
+const { generatePrakiraanImage } = require('./prakiraan');
 
 // ================= CONFIG =================
 const TOKEN = process.env.BOT_TOKEN;
@@ -358,7 +359,7 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '✈️ METAR'], ['📊 Graph', '🌐 BMKGsatu'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 BMKGsatu', '❌ Close']], resize_keyboard: true } }; }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🔍 Cek Data Terbaru', '🏠 Back to Home']], resize_keyboard: true } }; }
@@ -442,6 +443,21 @@ bot.on('message', async (msg) => {
     if (text === '✈️ METAR') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
     if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
+
+    if (text === '☁️ Prakiraan') {
+        const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
+        try {
+            const out = `prakiraan_${Date.now()}.png`;
+            await generatePrakiraanImage(out);
+            await bot.sendPhoto(cid, fs.readFileSync(out), { caption: '☁️ *Prakiraan Cuaca Kabupaten Kapuas Hulu*', parse_mode: 'Markdown' });
+            fs.unlinkSync(out);
+            bot.deleteMessage(cid, ldr.message_id).catch(() => {});
+        } catch (e) {
+            console.error('PRAKIRAAN ERR:', e.message);
+            bot.editMessageText(`❌ *GAGAL:* ${e.message}`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' });
+        }
+        return;
+    }
 
     if (text === '📊 Realtime Data') { const rt = await fetchRealtimeData(); return bot.sendMessage(cid, rt, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
