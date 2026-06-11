@@ -158,84 +158,77 @@ async function generatePrakiraanImages() {
         <head>
           <style>
             body { 
-                margin: 0; padding: 0; width: 1200px; height: 1800px;
+                margin: 0; padding: 0; width: 1080px; height: 1350px;
                 background: ${BMKG_BG};
                 display: flex; align-items: center; justify-content: center;
-                padding: 15px;
                 font-family: 'Tahoma', 'Verdana', sans-serif;
                 box-sizing: border-box;
+                padding: 10px;
             }
             .outer-container {
                 width: 100%; height: 100%;
                 background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-                border-radius: 35px;
-                box-shadow: 0 30px 80px rgba(15,23,42,0.18);
+                border-radius: 25px;
+                box-shadow: 0 20px 60px rgba(15,23,42,0.15);
                 overflow: hidden;
                 display: flex; flex-direction: column;
             }
             .header { 
-                padding: 24px 32px; 
+                padding: 15px 25px; 
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%); 
                 color: #f8fafc; 
-                display: flex; align-items: center; gap: 35px; 
+                display: flex; align-items: center; gap: 25px; 
             }
             .header-logo { 
-                width: 110px; height: 110px; border-radius: 28px; background: #e6f4ff; 
+                width: 85px; height: 85px; border-radius: 22px; background: #e6f4ff; 
                 display: flex; align-items: center; justify-content: center; 
-                border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 12px rgba(30,64,175,0.3);
+                border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 10px rgba(30,64,175,0.25);
             }
             .header-text { display: flex; flex-direction: column; }
-            .header-text h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 0.8px; }
-            .header-text h2 { margin: 6px 0 0 0; font-size: 22px; color: #e0f2fe; font-weight: 700; }
+            .header-text h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.6px; }
+            .header-text h2 { margin: 4px 0 0 0; font-size: 18px; color: #e0f2fe; font-weight: 700; }
             .period-box {
-                margin-top: 12px; display: inline-flex; align-items: center; gap: 12px; 
-                font-size: 20px; font-weight: 800; background: rgba(148, 163, 184, 0.28); 
-                color: #f8fafc; padding: 10px 20px; border-radius: 999px;
+                margin-top: 8px; display: inline-flex; align-items: center; gap: 10px; 
+                font-size: 16px; font-weight: 800; background: rgba(148, 163, 184, 0.25); 
+                color: #f8fafc; padding: 6px 14px; border-radius: 999px;
             }
-            .table-container { padding: 15px 24px 0 24px; flex: 1; }
-            .table-inner { border: 2px solid #d1d5db; border-radius: 22px; background: #f9fafb; overflow: hidden; }
-            table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 16px; color: rgba(0,0,0,0.95); }
+            .table-container { padding: 10px 20px 0 20px; flex: 1; overflow: hidden; }
+            .table-inner { border: 1.5px solid #d1d5db; border-radius: 18px; background: #f9fafb; overflow: hidden; }
+            table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; color: rgba(0,0,0,0.95); }
             th { 
-                font-family: 'Arial', sans-serif; padding: 14px 10px; font-size: 19px; font-weight: 900; 
-                letter-spacing: 0.8px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);
-                color: #f8fafc; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+                font-family: 'Arial', sans-serif; padding: 10px 4px; font-size: 15px; font-weight: 900; 
+                letter-spacing: 0.5px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);
+                color: #f8fafc; text-shadow: 0 1px 0 rgba(0,0,0,0.2);
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
             }
-            td { padding: 8px 6px; text-align: center; border-right: 1px solid rgba(148,163,184,0.25); border-bottom: 1px solid rgba(148,163,184,0.25); }
-            .td-kec { padding: 10px 12px; font-size: 20px; font-weight: 900; text-align: left; background: #f1f5f9; color: #0f172a; }
-            .td-value { font-size: 18px; font-weight: 800; }
-            .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
-            .icon-wrapper img { width: 44px; height: 44px; }
+            td { padding: 5px 2px; text-align: center; border-right: 1px solid rgba(148,163,184,0.15); border-bottom: 1px solid rgba(148,163,184,0.15); line-height: 1; }
+            .td-kec { padding: 6px 10px; font-size: 15px; font-weight: 900; text-align: left; background: #f1f5f9; color: #0f172a; }
+            .td-value { font-size: 14.5px; font-weight: 800; }
+            .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
+            .icon-wrapper img { width: 30px; height: 30px; }
 
-            .legend-container { padding: 10px 24px 20px 24px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
-            .dev-label { font-size: 14px; color: #6b7280; margin-bottom: 6px; text-align: center; font-weight: 700; }
+            .legend-section { padding-bottom: 15px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
+            .dev-label { font-size: 12px; color: #6b7280; margin: 8px 0 4px 0; text-align: center; font-weight: 800; }
             .legend-block { 
-                border-radius: 15px; background: ${BMKG_PRIMARY}; padding: 12px 15px; margin-top: 5px; 
-                width: 100%; align-self: center; color: #eaf2ff; border: 1px solid rgba(191,219,254,0.4);
-                display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 15px; align-items: center;
+                border-radius: 12px; background: ${BMKG_PRIMARY}; padding: 8px 10px; 
+                width: 95%; color: #eaf2ff; border: 1px solid rgba(191,219,254,0.4);
+                display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; align-items: center;
             }
-            .legend-item { display: flex; flex-direction: column; align-items: center; gap: 6px; justify-content: center; padding: 4px 0; }
-            .legend-icon-box { width: 40px; height: 40px; border-radius: 10px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.5); }
-            .legend-icon-box img { width: 30px; height: 30px; }
-            .legend-text { font-size: 15px; font-weight: 900; color: #eaf2ff; text-align: center; line-height: 1.2; }
+            .legend-item { display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: center; }
+            .legend-icon-box { width: 32px; height: 32px; border-radius: 8px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.5); }
+            .legend-icon-box img { width: 24px; height: 24px; }
+            .legend-text { font-size: 11px; font-weight: 900; color: #eaf2ff; text-align: center; line-height: 1.1; }
 
-            .footer-banner {
-                width: 100%; padding: 20px 32px; margin-top: 15px;
-                background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
-                color: #f8fafc; border: 1px solid rgba(191,219,254,0.4);
-                box-shadow: 0 10px 30px rgba(15,23,42,0.2);
-                text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 0.5px;
-                box-sizing: border-box; border-radius: 15px;
-            }
+            tr:last-child td { border-bottom: none; }
           </style>
         </head>
         <body>
           <div class="outer-container">
             <div class="header">
-              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="85"></div>
+              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="65"></div>
               <div class="header-text">
-                <h1>BMKG - Stasiun Meteorologi Pangsuma Kapuas Hulu</h1>
-                <h2>Prakiraan Cuaca Kabupaten Kapuas Hulu ${titleSuffix}</h2>
+                <h1>BMKG - Stasiun Meteorologi Pangsuma</h1>
+                <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
                 <div class="period-box">
                   <span>Berlaku</span>
                   <span style="color: #bae6fd;">${dateLabel}</span>
@@ -248,26 +241,26 @@ async function generatePrakiraanImages() {
                 <table>
                   <thead>
                     <tr>
-                      <th style="width: 240px; border-top-left-radius: 20px;">KECAMATAN</th>
+                      <th style="width: 200px; border-top-left-radius: 16px;">KECAMATAN</th>
                       ${hoursHeader.map(h => `<th>${h}</th>`).join('')}
                       <th>SUHU</th>
                       <th>RH</th>
-                      <th style="border-top-right-radius: 20px; border-right: none;">ANGIN</th>
+                      <th style="border-top-right-radius: 16px; border-right: none;">ANGIN</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${rows.map((r, idx) => `
-                      <tr style="background: ${idx % 2 === 1 ? '#ffffff' : '#eef5ff'}">
+                      <tr style="background: ${idx % 2 === 1 ? '#ffffff' : '#f1f5f9'}">
                         <td class="td-kec">${r.name}</td>
                         ${r.cuaca.map(c => `
                             <td>
                                 <div class="icon-wrapper">
-                                    ${c.icon ? `<img src="${c.icon}">` : `<span style="font-size: 14px;">${c.text}</span>`}
+                                    ${c.icon ? `<img src="${c.icon}">` : `<span style="font-size: 11px;">${c.text}</span>`}
                                 </div>
                             </td>`).join('')}
                         <td class="td-value" style="color: #b91c1c;">${r.suhu}</td>
                         <td class="td-value" style="color: #1d4ed8;">${r.rh}</td>
-                        <td class="td-value" style="border-right: none;">${r.angin}</td>
+                        <td class="td-value" style="border-right: none; font-size: 13px;">${r.angin}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -275,7 +268,7 @@ async function generatePrakiraanImages() {
               </div>
             </div>
 
-            <div class="legend-container">
+            <div class="legend-section">
               <div class="dev-label">developed by Sinangga</div>
               <div class="legend-block">
                 ${legendItems.map(li => `
@@ -286,9 +279,6 @@ async function generatePrakiraanImages() {
                     <span class="legend-text">${li.label}</span>
                   </div>
                 `).join('')}
-              </div>
-              <div class="footer-banner">
-                Stasiun Meteorologi Pangsuma – Kapuas Hulu
               </div>
             </div>
           </div>
@@ -301,7 +291,7 @@ async function generatePrakiraanImages() {
             html: html,
             puppeteerArgs: {
                 executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1200,1800']
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1080,1350']
             }
         });
         results.push(outputFile);
