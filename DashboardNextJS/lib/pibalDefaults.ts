@@ -1,0 +1,20 @@
+export const DEFAULT_PIBAL_CODE = `Message 1:
+UPID62 WIOP 271200
+PPAA 77121 96565
+55185 23012
+77999=
+
+Message 2:
+UGID62 WIOP 271200
+PPBB 77121 96565
+90/12 00000 31004 28004
+90345 27006 25007 23012=`;
+
+export const DEFAULT_ASCENT_RATE = 5;
+export const DEFAULT_TIME_STEP = 60;
+
+export const STATION_INFO = {
+  name: "BMKG Pangsuma",
+  latitude: 0.8389,
+  longitude: 112.9348,
+};

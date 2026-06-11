@@ -1,0 +1,836 @@
+{
+  "easy": [
+    {
+      "question": "Apa kepanjangan dari BMKG?",
+      "options": ["Badan Meteorologi, Klimatologi, dan Geofisika", "Badan Meteorologi, Klimatologi, dan Geografi", "Badan Mandiri Klimatologi dan Geofisika", "Badan Meteorologi dan Geofisika"],
+      "answer": "Badan Meteorologi, Klimatologi, dan Geofisika",
+      "explanation": "BMKG adalah lembaga pemerintah non-departemen Indonesia yang mempunyai tugas melaksanakan tugas pemerintahan di bidang meteorologi, klimatologi, dan geofisika."
+    },
+    {
+      "question": "Alat untuk mengukur suhu udara disebut...",
+      "options": ["Termometer", "Barometer", "Anemometer", "Higrometer"],
+      "answer": "Termometer",
+      "explanation": "Termometer adalah alat yang digunakan untuk mengukur suhu (temperatur), ataupun perubahan suhu."
+    },
+    {
+      "question": "Apa yang menyebabkan terjadinya angin?",
+      "options": ["Perbedaan tekanan udara", "Perputaran bumi", "Gaya gravitasi bulan", "Aktivitas manusia"],
+      "answer": "Perbedaan tekanan udara",
+      "explanation": "Angin terjadi karena adanya perbedaan tekanan udara di dua wilayah yang berbeda. Udara bergerak dari tempat bertekanan tinggi ke tempat bertekanan rendah."
+    },
+    {
+      "question": "Hujan yang disertai dengan kilat dan guntur disebut...",
+      "options": ["Hujan badai", "Hujan asam", "Hujan salju", "Hujan gerimis"],
+      "answer": "Hujan badai",
+      "explanation": "Hujan badai (thunderstorm) adalah hujan yang disertai dengan badai, kilat (petir), dan guntur."
+    },
+    {
+      "question": "Lapisan gas yang menyelimuti bumi disebut...",
+      "options": ["Atmosfer", "Litosfer", "Hidrosfer", "Biosfer"],
+      "answer": "Atmosfer",
+      "explanation": "Atmosfer adalah lapisan gas yang melingkupi sebuah planet, termasuk bumi, dari permukaan planet tersebut sampai jauh di luar angkasa."
+    },
+    {
+      "question": "Proses perubahan air menjadi uap air disebut...",
+      "options": ["Evaporasi", "Kondensasi", "Presipitasi", "Transpirasi"],
+      "answer": "Evaporasi",
+      "explanation": "Evaporasi adalah proses perubahan molekul di dalam keadaan cair (contohnya air) dengan spontan menjadi gas (contohnya uap air)."
+    },
+    {
+      "question": "Awan yang bentuknya seperti kapas dan biasanya menandakan cuaca cerah adalah awan...",
+      "options": ["Kumulus", "Stratus", "Sirus", "Nimbus"],
+      "answer": "Kumulus",
+      "explanation": "Awan kumulus adalah awan tebal dengan puncak yang agak tinggi dan alas awan yang datar, sering dikaitkan dengan cuaca cerah."
+    },
+    {
+      "question": "Apa satuan untuk mengukur kecepatan angin?",
+      "options": ["Knot", "Derajat Celsius", "Hertz", "Pascal"],
+      "answer": "Knot",
+      "explanation": "Knot adalah satuan kecepatan yang umum digunakan dalam meteorologi dan navigasi, setara dengan satu mil laut per jam."
+    },
+    {
+      "question": "Garis di peta yang menghubungkan tempat-tempat dengan tekanan udara yang sama disebut...",
+      "options": ["Isobar", "Isoterm", "Isohyet", "Kontur"],
+      "answer": "Isobar",
+      "explanation": "Isobar adalah garis yang digambar pada peta cuaca yang menghubungkan titik-titik dengan tekanan atmosfer yang sama."
+    },
+    {
+      "question": "Pelangi biasanya muncul setelah hujan dan ketika matahari bersinar. Posisi matahari saat kita melihat pelangi adalah...",
+      "options": ["Di belakang kita", "Di depan kita", "Tepat di atas kita", "Di bawah cakrawala"],
+      "answer": "Di belakang kita",
+      "explanation": "Pelangi terbentuk ketika cahaya matahari dibiaskan oleh butir-butir air di udara. Untuk melihatnya, matahari harus berada di belakang pengamat."
+    },
+    {
+      "question": "Berapa persen perkiraan komposisi Oksigen di atmosfer bumi?",
+      "options": ["21%", "78%", "1%", "0.04%"],
+      "answer": "21%",
+      "explanation": "Atmosfer bumi terdiri dari sekitar 78% Nitrogen, 21% Oksigen, dan sisanya gas-gas lain dalam jumlah kecil."
+    },
+    {
+      "question": "Alat untuk mengukur tekanan udara disebut...",
+      "options": ["Barometer", "Termometer", "Anemometer", "Higrometer"],
+      "answer": "Barometer",
+      "explanation": "Barometer adalah alat yang digunakan untuk mengukur tekanan udara."
+    },
+    {
+      "question": "Apa sumber energi utama yang menggerakkan siklus cuaca di Bumi?",
+      "options": ["Matahari", "Panas bumi (geotermal)", "Angin", "Bulan"],
+      "answer": "Matahari",
+      "explanation": "Energi dari matahari adalah penggerak utama dari siklus air, angin, dan sistem cuaca di planet kita."
+    },
+    {
+      "question": "Kabut adalah awan yang berada di...",
+      "options": ["Dekat permukaan tanah", "Lapisan stratosfer", "Lapisan mesosfer", "Luar angkasa"],
+      "answer": "Dekat permukaan tanah",
+      "explanation": "Kabut pada dasarnya adalah awan jenis stratus yang terbentuk sangat dekat dengan atau di permukaan tanah."
+    },
+    {
+      "question": "Pusat tekanan udara rendah biasanya diasosiasikan dengan cuaca...",
+      "options": ["Berawan dan hujan", "Cerah dan tenang", "Sangat dingin", "Sangat kering"],
+      "answer": "Berawan dan hujan",
+      "explanation": "Di area tekanan rendah, udara cenderung naik, mendingin, dan membentuk awan serta presipitasi (hujan)."
+    },
+    {
+      "question": "Tsunami adalah gelombang laut besar yang paling sering disebabkan oleh...",
+      "options": ["Gempa bumi di dasar laut", "Angin kencang", "Letusan gunung berapi di darat", "Hujan deras"],
+      "answer": "Gempa bumi di dasar laut",
+      "explanation": "Penyebab paling umum tsunami adalah gempa bumi bawah laut, terutama yang terjadi di zona subduksi."
+    },
+    {
+      "question": "Mana dari berikut ini yang merupakan gas rumah kaca?",
+      "options": ["Karbon dioksida (CO2)", "Oksigen (O2)", "Nitrogen (N2)", "Argon (Ar)"],
+      "answer": "Karbon dioksida (CO2)",
+      "explanation": "Karbon dioksida adalah gas rumah kaca utama yang menyerap dan memancarkan radiasi inframerah, sehingga berkontribusi terhadap pemanasan global."
+    },
+    {
+      "question": "Banjir yang terjadi secara tiba-tiba dengan cepat akibat hujan lebat disebut...",
+      "options": ["Banjir bandang", "Banjir rob", "Banjir musiman", "Genangan"],
+      "answer": "Banjir bandang",
+      "explanation": "Banjir bandang adalah banjir besar yang datang secara tiba-tiba dengan aliran deras yang membawa material seperti lumpur dan bebatuan."
+    },
+    {
+      "question": "Kekeringan yang disebabkan oleh kurangnya curah hujan dalam periode yang lama disebut kekeringan...",
+      "options": ["Meteorologis", "Hidrologis", "Agrikultural", "Sosioekonomi"],
+      "answer": "Meteorologis",
+      "explanation": "Kekeringan meteorologis didefinisikan sebagai kondisi di mana curah hujan berada di bawah normal untuk periode waktu yang panjang."
+    },
+    {
+      "question": "Alat untuk mengukur kelembaban udara disebut...",
+      "options": ["Higrometer", "Termometer", "Barometer", "Anemometer"],
+      "answer": "Higrometer",
+      "explanation": "Higrometer atau kadang disebut juga sebagai psychrometer digunakan untuk mengukur tingkat kelembaban relatif di udara."
+    },
+    {
+        "question": "Gelombang panas adalah periode cuaca ... yang berkepanjangan.",
+        "options": ["Sangat panas", "Sangat dingin", "Sangat basah", "Sangat berangin"],
+        "answer": "Sangat panas",
+        "explanation": "Gelombang panas didefinisikan sebagai periode cuaca panas yang tidak normal dan berlebihan yang berlangsung selama beberapa hari hingga beberapa minggu."
+    },
+    {
+        "question": "Pulau di Indonesia yang paling padat penduduknya adalah...",
+        "options": ["Jawa", "Sumatra", "Kalimantan", "Sulawesi"],
+        "answer": "Jawa",
+        "explanation": "Pulau Jawa merupakan pusat populasi, ekonomi, dan politik Indonesia, menjadikannya pulau terpadat di negara ini."
+    },
+    {
+        "question": "Ibukota provinsi Kalimantan Barat adalah...",
+        "options": ["Pontianak", "Banjarmasin", "Samarinda", "Palangkaraya"],
+        "answer": "Pontianak",
+        "explanation": "Pontianak adalah ibukota dan kota terbesar di provinsi Kalimantan Barat, yang dikenal karena dilintasi garis khatulistiwa."
+    },
+    {
+        "question": "Gunung tertinggi di Indonesia adalah...",
+        "options": ["Puncak Jaya", "Gunung Kerinci", "Gunung Rinjani", "Gunung Semeru"],
+        "answer": "Puncak Jaya",
+        "explanation": "Puncak Jaya, yang juga dikenal sebagai Carstensz Pyramid, di Papua adalah gunung tertinggi di Indonesia dan Oseania."
+    },
+    {
+        "question": "Sungai terpanjang di Indonesia adalah...",
+        "options": ["Sungai Kapuas", "Sungai Mahakam", "Sungai Barito", "Sungai Musi"],
+        "answer": "Sungai Kapuas",
+        "explanation": "Dengan panjang lebih dari 1.100 kilometer, Sungai Kapuas di Kalimantan Barat adalah sungai terpanjang di Indonesia."
+    },
+    {
+        "question": "Danau terbesar di Indonesia adalah...",
+        "options": ["Danau Toba", "Danau Towuti", "Danau Poso", "Danau Maninjau"],
+        "answer": "Danau Toba",
+        "explanation": "Danau Toba di Sumatra Utara adalah danau vulkanik terbesar di dunia, terbentuk oleh letusan supervulkanik ribuan tahun yang lalu."
+    },
+    {
+        "question": "Apa nama lain dari garis khatulistiwa?",
+        "options": ["Garis Ekuator", "Garis Bujur", "Garis Lintang", "Garis Meridian"],
+        "answer": "Garis Ekuator",
+        "explanation": "Garis ekuator atau khatulistiwa adalah garis imajiner yang membagi bumi menjadi dua belahan, yaitu Belahan Bumi Utara dan Belahan Bumi Selatan."
+    },
+    {
+        "question": "Peringatan dini tsunami biasanya dikeluarkan setelah terjadi...",
+        "options": ["Gempa bumi kuat di laut", "Badai petir", "Gerhana matahari", "Angin topan"],
+        "answer": "Gempa bumi kuat di laut",
+        "explanation": "Sistem peringatan dini tsunami diaktifkan ketika terjadi gempa bumi bawah laut dengan magnitudo yang signifikan yang berpotensi menyebabkan tsunami."
+    },
+    {
+        "question": "Musim hujan di sebagian besar wilayah Indonesia biasanya disebabkan oleh angin...",
+        "options": ["Muson Barat", "Muson Timur", "Angin Pasat", "Angin Fohn"],
+        "answer": "Muson Barat",
+        "explanation": "Angin Muson Barat membawa banyak uap air dari Samudra Hindia, menyebabkan musim hujan di sebagian besar wilayah Indonesia dari Oktober hingga April."
+    },
+    {
+        "question": "Indeks Standar Pencemar Udara (ISPU) digunakan untuk mengukur...",
+        "options": ["Kualitas udara", "Kualitas air", "Tingkat kebisingan", "Suhu tanah"],
+        "answer": "Kualitas udara",
+        "explanation": "ISPU adalah angka yang digunakan untuk melaporkan kualitas udara saat ini atau yang diperkirakan, dan dampaknya terhadap kesehatan."
+    },
+    {
+        "question": "Fenomena optik di atmosfer yang disebabkan oleh pembiasan cahaya matahari oleh kristal es di awan sirus adalah...",
+        "options": ["Halo", "Pelangi", "Aurora", "Fata Morgana"],
+        "answer": "Halo",
+        "explanation": "Halo adalah cincin cahaya yang sering terlihat mengelilingi matahari atau bulan, yang disebabkan oleh kristal es di awan sirus tinggi."
+    },
+    {
+        "question": "Apa itu 'hotspot' dalam konteks pemantauan kebakaran hutan?",
+        "options": ["Titik panas yang terdeteksi satelit", "Area berkumpulnya petugas pemadam", "Sumber air terdekat", "Puncak gunung"],
+        "answer": "Titik panas yang terdeteksi satelit",
+        "explanation": "Hotspot adalah anomali termal yang terdeteksi oleh sensor satelit, yang mengindikasikan kemungkinan adanya kebakaran hutan atau lahan."
+    },
+    {
+        "question": "Gerakan tanah atau longsor paling sering terjadi di daerah...",
+        "options": ["Lereng curam saat hujan lebat", "Pantai berpasir", "Gurun datar", "Rawa-rawa"],
+        "answer": "Lereng curam saat hujan lebat",
+        "explanation": "Tanah di lereng yang curam menjadi jenuh oleh air hujan, kehilangan kekuatannya, dan akhirnya longsor karena gaya gravitasi."
+    },
+    {
+        "question": "Negara yang berbatasan darat langsung dengan Indonesia di pulau Kalimantan adalah...",
+        "options": ["Malaysia", "Singapura", "Filipina", "Brunei Darussalam"],
+        "answer": "Malaysia",
+        "explanation": "Indonesia berbagi perbatasan darat dengan Malaysia di pulau Kalimantan (bagian utara) dan dengan Papua Nugini di pulau Papua."
+    },
+    {
+        "question": "Embun terbentuk karena proses...",
+        "options": ["Kondensasi", "Evaporasi", "Sublimasi", "Infiltrasi"],
+        "answer": "Kondensasi",
+        "explanation": "Embun terbentuk ketika uap air di udara mendingin dan berubah menjadi tetesan air (mengembun) pada permukaan benda yang dingin."
+    },
+    {
+        "question": "Curah hujan diukur dalam satuan...",
+        "options": ["Milimeter (mm)", "Kilometer per jam (km/h)", "Hektopascal (hPa)", "Persentase (%)"],
+        "answer": "Milimeter (mm)",
+        "explanation": "Curah hujan diukur berdasarkan ketinggian air hujan yang terkumpul di permukaan datar, dan dinyatakan dalam satuan milimeter."
+    },
+    {
+        "question": "Wilayah di sekitar gunung berapi yang dianggap berbahaya saat terjadi letusan disebut...",
+        "options": ["Kawasan Rawan Bencana (KRB)", "Zona Ekonomi Eksklusif (ZEE)", "Cagar Alam", "Taman Nasional"],
+        "answer": "Kawasan Rawan Bencana (KRB)",
+        "explanation": "KRB adalah wilayah yang diidentifikasi memiliki tingkat risiko tinggi terhadap bahaya letusan gunung berapi, seperti aliran piroklastik dan lahar."
+    },
+    {
+        "question": "Skala untuk mengukur intensitas badai tropis berdasarkan kecepatan anginnya adalah...",
+        "options": ["Skala Saffir-Simpson", "Skala Richter", "Skala Mercalli", "Skala Beaufort"],
+        "answer": "Skala Saffir-Simpson",
+        "explanation": "Skala Angin Badai Saffir-Simpson mengkategorikan badai tropis (hurricanes) dari Kategori 1 hingga 5 berdasarkan kecepatan angin berkelanjutannya."
+    },
+    {
+        "question": "Arah angin dinyatakan berdasarkan...",
+        "options": ["Arah datangnya angin", "Arah tujuannya angin", "Kecepatan rata-ratanya", "Suhunya"],
+        "answer": "Arah datangnya angin",
+        "explanation": "Dalam meteorologi, arah angin selalu dilaporkan sebagai arah dari mana angin itu berasal. Misalnya, angin barat bertiup dari barat ke timur."
+    },
+    {
+        "question": "Perubahan iklim global terutama disebabkan oleh peningkatan...",
+        "options": ["Konsentrasi gas rumah kaca", "Aktivitas matahari", "Letusan gunung berapi", "Populasi manusia"],
+        "answer": "Konsentrasi gas rumah kaca",
+        "explanation": "Aktivitas manusia, terutama pembakaran bahan bakar fosil, telah meningkatkan konsentrasi gas rumah kaca di atmosfer, yang memerangkap panas dan menyebabkan pemanasan global."
+    },
+    {
+        "question": "Hutan yang pohon-pohonnya menggugurkan daunnya pada musim kemarau disebut...",
+        "options": ["Hutan musim", "Hutan hujan tropis", "Hutan bakau", "Sabana"],
+        "answer": "Hutan musim",
+        "explanation": "Hutan musim atau hutan gugur tropis memiliki pohon yang beradaptasi dengan musim kemarau panjang dengan cara menggugurkan daunnya untuk mengurangi penguapan."
+    },
+    {
+        "question": "Sistem Peringatan Dini Cuaca Ekstrem bertujuan untuk...",
+        "options": ["Mengurangi risiko korban jiwa dan kerugian materi", "Menghentikan cuaca ekstrem", "Membuat hujan buatan", "Memprediksi gempa"],
+        "answer": "Mengurangi risiko korban jiwa dan kerugian materi",
+        "explanation": "Dengan memberikan informasi sebelum terjadinya cuaca ekstrem, sistem peringatan dini memungkinkan masyarakat dan pihak berwenang untuk mengambil tindakan pencegahan."
+    },
+    {
+        "question": "Lapisan atmosfer terendah tempat terjadinya sebagian besar fenomena cuaca adalah...",
+        "options": ["Troposfer", "Stratosfer", "Mesosfer", "Termosfer"],
+        "answer": "Troposfer",
+        "explanation": "Troposfer adalah lapisan atmosfer yang paling dekat dengan permukaan Bumi, di mana awan, hujan, angin, dan sebagian besar cuaca yang kita alami terjadi."
+    },
+    {
+        "question": "Garis imajiner yang membentang dari Kutub Utara ke Kutub Selatan disebut...",
+        "options": ["Garis Bujur (Meridian)", "Garis Lintang (Paralel)", "Garis Khatulistiwa", "Garis Balik"],
+        "answer": "Garis Bujur (Meridian)",
+        "explanation": "Garis bujur adalah garis vertikal pada peta yang digunakan untuk menentukan posisi timur-barat suatu lokasi di permukaan Bumi."
+    },
+    {
+        "question": "Angin puting beliung adalah sebutan lokal di Indonesia untuk...",
+        "options": ["Tornado", "Siklon", "Badai", "Tsunami"],
+        "answer": "Tornado",
+        "explanation": "Puting beliung adalah kolom udara yang berputar kencang yang menyentuh permukaan tanah, fenomena yang sama dengan tornado meskipun seringkali dengan skala yang lebih kecil."
+    },
+    {
+        "question": "Proses pelepasan uap air dari tumbuhan ke atmosfer disebut...",
+        "options": ["Transpirasi", "Evaporasi", "Kondensasi", "Gutasi"],
+        "answer": "Transpirasi",
+        "explanation": "Transpirasi adalah bagian dari siklus air di mana air yang diserap oleh akar tumbuhan dilepaskan sebagai uap air melalui daun."
+    },
+    {
+        "question": "Cuaca adalah keadaan atmosfer pada ... dan ..., sedangkan iklim adalah rata-rata cuaca dalam periode yang ...",
+        "options": ["Waktu singkat, tempat tertentu, panjang", "Waktu panjang, seluruh dunia, singkat", "Waktu singkat, seluruh dunia, panjang", "Waktu panjang, tempat tertentu, singkat"],
+        "answer": "Waktu singkat, tempat tertentu, panjang",
+        "explanation": "Cuaca menggambarkan kondisi atmosfer sesaat (jam, hari), sedangkan iklim menggambarkan pola cuaca rata-rata selama bertahun-tahun atau lebih."
+    },
+    {
+        "question": "Efek rumah kaca adalah proses ... oleh gas-gas di atmosfer.",
+        "options": ["Pemerangkapan panas", "Pendinginan udara", "Pemecahan ozon", "Pemantulan cahaya"],
+        "answer": "Pemerangkapan panas",
+        "explanation": "Gas rumah kaca di atmosfer menyerap sebagian panas (radiasi inframerah) dari permukaan Bumi, mencegahnya lepas ke angkasa dan menjaga planet tetap hangat."
+    },
+    {
+        "question": "Alat yang digunakan untuk mencatat data gempa secara otomatis adalah...",
+        "options": ["Seismograf", "Seismogram", "Richter scale", "Barograf"],
+        "answer": "Seismograf",
+        "explanation": "Seismograf adalah alat yang mendeteksi dan merekam getaran gempa bumi. Hasil rekamannya disebut seismogram."
+    }
+],
+"medium": [
+    {
+      "question": "Apa nama angin yang bergerak dari laut ke darat pada siang hari?",
+      "options": ["Angin laut", "Angin darat", "Angin muson", "Angin fohn"],
+      "answer": "Angin laut",
+      "explanation": "Angin laut terjadi pada siang hari ketika daratan lebih cepat panas daripada lautan, menyebabkan udara di darat naik dan udara dingin dari laut masuk menggantikannya."
+    },
+    {
+      "question": "Skala yang digunakan untuk mengukur kekuatan gempa bumi adalah...",
+      "options": ["Skala Richter", "Skala Celsius", "Skala Beaufort", "Skala Saffir-Simpson"],
+      "answer": "Skala Richter",
+      "explanation": "Skala Richter adalah salah satu skala yang paling umum digunakan untuk mengukur magnitudo atau kekuatan gempa bumi."
+    },
+    {
+      "question": "Fenomena pemanasan suhu permukaan laut di atas rata-rata di Samudra Pasifik bagian tengah dan timur disebut...",
+      "options": ["El Niño", "La Niña", "Dipole Mode", "Siklon Tropis"],
+      "answer": "El Niño",
+      "explanation": "El Niño adalah fenomena iklim yang menyebabkan pemanasan suhu permukaan laut yang signifikan di Samudra Pasifik, yang mempengaruhi pola cuaca global."
+    },
+    {
+      "question": "Apa fungsi dari lapisan ozon di atmosfer?",
+      "options": ["Melindungi dari radiasi ultraviolet (UV)", "Menghasilkan oksigen", "Mengatur suhu bumi", "Menyebabkan efek rumah kaca"],
+      "answer": "Melindungi dari radiasi ultraviolet (UV)",
+      "explanation": "Lapisan ozon (O3) di stratosfer menyerap sebagian besar radiasi ultraviolet (UV) berbahaya dari matahari, melindungi kehidupan di Bumi."
+    },
+    {
+      "question": "Istilah untuk titik di permukaan bumi yang berada tepat di atas pusat gempa (hiposentrum) adalah...",
+      "options": ["Episentrum", "Hiposentrum", "Patahan", "Magnitudo"],
+      "answer": "Episentrum",
+      "explanation": "Episentrum adalah titik di permukaan bumi yang merupakan proyeksi vertikal dari hiposentrum, tempat energi gempa pertama kali dilepaskan."
+    },
+    {
+      "question": "Awan yang sering dikaitkan dengan badai petir (thunderstorm) adalah...",
+      "options": ["Kumulonimbus", "Altostratus", "Sirokumulus", "Nimbostratus"],
+      "answer": "Kumulonimbus",
+      "explanation": "Awan Kumulonimbus adalah awan vertikal yang menjulang tinggi, padat, dan sering menyebabkan hujan lebat, petir, angin kencang, dan terkadang hujan es."
+    },
+    {
+      "question": "Fenomena La Niña adalah kebalikan dari El Niño, yang ditandai dengan...",
+      "options": ["Pendinginan suhu permukaan laut di Pasifik tengah dan timur", "Pemanasan suhu permukaan laut di Pasifik tengah dan timur", "Tidak ada perubahan suhu laut", "Peningkatan aktivitas gunung berapi"],
+      "answer": "Pendinginan suhu permukaan laut di Pasifik tengah dan timur",
+      "explanation": "La Niña terjadi ketika suhu permukaan laut di Samudra Pasifik bagian tengah dan timur menjadi lebih dingin dari biasanya, yang juga mempengaruhi cuaca global."
+    },
+    {
+      "question": "Skala Mercalli digunakan untuk mengukur ... gempa bumi.",
+      "options": ["Dampak dan kerusakan yang dirasakan", "Kekuatan atau magnitudo", "Kedalaman hiposentrum", "Frekuensi getaran"],
+      "answer": "Dampak dan kerusakan yang dirasakan",
+      "explanation": "Skala Intensitas Mercalli mengukur tingkat kerusakan yang disebabkan oleh gempa bumi berdasarkan pengamatan dari orang-orang yang merasakannya."
+    },
+    {
+      "question": "Angin Muson Timur yang bertiup di Indonesia (sekitar April-Oktober) bersifat kering karena berasal dari...",
+      "options": ["Benua Australia", "Benua Asia", "Samudra Hindia", "Samudra Pasifik"],
+      "answer": "Benua Australia",
+      "explanation": "Angin Muson Timur berasal dari gurun di Australia yang kering, sehingga angin ini membawa sedikit uap air dan menyebabkan musim kemarau di Indonesia."
+    },
+    {
+      "question": "Garis di peta yang menghubungkan titik-titik dengan curah hujan yang sama disebut...",
+      "options": ["Isohyet", "Isobar", "Isoterm", "Isohaline"],
+      "answer": "Isohyet",
+      "explanation": "Isohyet adalah garis pada peta cuaca yang menghubungkan semua titik yang memiliki jumlah curah hujan yang sama dalam periode waktu tertentu."
+    },
+    {
+      "question": "Efek Coriolis, yang disebabkan oleh rotasi Bumi, menyebabkan angin dan arus laut di Belahan Bumi Utara berbelok ke arah...",
+      "options": ["Kanan", "Kiri", "Atas", "Bawah"],
+      "answer": "Kanan",
+      "explanation": "Efek Coriolis membelokkan benda yang bergerak (seperti angin) ke kanan di Belahan Bumi Utara dan ke kiri di Belahan Bumi Selatan."
+    },
+    {
+      "question": "Hujan Asam disebabkan oleh polutan udara seperti ... yang bereaksi dengan air di atmosfer.",
+      "options": ["Sulfur dioksida (SO2) dan Nitrogen oksida (NOx)", "Karbon dioksida (CO2)", "Ozon (O3)", "Metana (CH4)"],
+      "answer": "Sulfur dioksida (SO2) dan Nitrogen oksida (NOx)",
+      "explanation": "SO2 dan NOx dari pembakaran bahan bakar fosil bereaksi dengan uap air di atmosfer untuk membentuk asam sulfat dan asam nitrat, yang kemudian jatuh sebagai hujan asam."
+    },
+    {
+      "question": "Badan antariksa Amerika Serikat yang juga mengoperasikan banyak satelit cuaca dan lingkungan adalah...",
+      "options": ["NASA (National Aeronautics and Space Administration)", "NOAA (National Oceanic and Atmospheric Administration)", "ESA (European Space Agency)", "JAXA (Japan Aerospace Exploration Agency)"],
+      "answer": "NOAA (National Oceanic and Atmospheric Administration)",
+      "explanation": "NOAA adalah badan ilmiah pemerintah AS yang berfokus pada kondisi lautan dan atmosfer, termasuk prakiraan cuaca dan pemantauan iklim."
+    },
+    {
+      "question": "Siklon tropis tidak terbentuk di dekat khatulistiwa karena...",
+      "options": ["Efek Coriolis terlalu lemah", "Suhu air laut terlalu dingin", "Tekanan udara terlalu tinggi", "Angin terlalu kencang"],
+      "answer": "Efek Coriolis terlalu lemah",
+      "explanation": "Siklon tropis membutuhkan gaya Coriolis untuk memulai perputarannya. Gaya ini hampir nol di khatulistiwa, sehingga badai tidak dapat terbentuk di sana."
+    },
+    {
+      "question": "Suhu di mana udara menjadi jenuh dan uap air mulai mengembun disebut...",
+      "options": ["Titik embun (Dew Point)", "Titik beku", "Titik didih", "Suhu absolut"],
+      "answer": "Titik embun (Dew Point)",
+      "explanation": "Titik embun adalah suhu di mana udara harus didinginkan agar uap air di dalamnya mengembun menjadi embun atau kabut."
+    },
+    {
+      "question": "Inversi suhu adalah kondisi atmosfer di mana...",
+      "options": ["Suhu meningkat seiring ketinggian", "Suhu menurun seiring ketinggian", "Suhu tetap konstan", "Tekanan udara meningkat drastis"],
+      "answer": "Suhu meningkat seiring ketinggian",
+      "explanation": "Normalnya, suhu menurun seiring ketinggian. Pada kondisi inversi, lapisan udara hangat berada di atas lapisan udara dingin, yang dapat memerangkap polusi di dekat permukaan."
+    },
+    {
+      "question": "Gelombang Rossby adalah gelombang raksasa di atmosfer yang berhubungan dengan...",
+      "options": ["Aliran jet stream", "Siklus pasang surut", "Medan magnet bumi", "Aktivitas bintik matahari"],
+      "answer": "Aliran jet stream",
+      "explanation": "Gelombang Rossby adalah kelokan besar pada aliran jet stream yang bergerak ke arah kutub dan berperan penting dalam mentransfer panas dan menentukan pola cuaca."
+    },
+    {
+      "question": "Kawasan Wallacea di Indonesia adalah zona transisi antara fauna...",
+      "options": ["Asia dan Australia", "Asia dan Afrika", "Australia dan Amerika Selatan", "Eropa dan Asia"],
+      "answer": "Asia dan Australia",
+      "explanation": "Wallacea, yang mencakup Sulawesi, Nusa Tenggara, dan Maluku, memiliki fauna unik yang merupakan campuran antara spesies dari lempeng benua Asia dan Australia."
+    },
+    {
+      "question": "Apa itu lahar dingin?",
+      "options": ["Aliran lumpur vulkanik yang dingin karena hujan", "Aliran lava yang sudah membeku", "Salju yang longsor dari puncak gunung berapi", "Gas beracun dari kawah"],
+      "answer": "Aliran lumpur vulkanik yang dingin karena hujan",
+      "explanation": "Lahar dingin adalah aliran material vulkanik (seperti abu dan pasir) yang tercampur dengan air hujan, membentuk aliran lumpur pekat yang sangat merusak."
+    },
+    {
+      "question": "Konvergensi Intertropis (ITCZ) adalah zona di dekat khatulistiwa di mana angin pasat...",
+      "options": ["Bertemu (konvergen)", "Berpisah (divergen)", "Berhenti total", "Berubah arah"],
+      "answer": "Bertemu (konvergen)",
+      "explanation": "ITCZ adalah sabuk tekanan rendah tempat angin pasat dari belahan bumi utara dan selatan bertemu, menyebabkan udara naik dan sering menghasilkan badai petir yang hebat."
+    },
+    {
+        "question": "Albedo adalah ukuran kemampuan suatu permukaan untuk...",
+        "options": ["Memantulkan cahaya matahari", "Menyerap panas", "Menghantarkan listrik", "Menahan air"],
+        "answer": "Memantulkan cahaya matahari",
+        "explanation": "Permukaan dengan albedo tinggi (seperti salju) memantulkan banyak cahaya matahari, sedangkan permukaan dengan albedo rendah (seperti aspal) menyerap banyak cahaya matahari."
+    },
+    {
+        "question": "Radiosonde adalah instrumen yang diterbangkan dengan balon cuaca untuk mengukur...",
+        "options": ["Profil vertikal atmosfer", "Kecepatan angin permukaan", "Curah hujan", "Ketinggian awan"],
+        "answer": "Profil vertikal atmosfer",
+        "explanation": "Radiosonde mengukur suhu, kelembaban, dan tekanan udara pada berbagai ketinggian saat balon naik, data ini penting untuk prakiraan cuaca."
+    },
+    {
+        "question": "Angin gradien adalah angin teoretis yang dihasilkan dari keseimbangan antara gaya gradien tekanan, gaya Coriolis, dan...",
+        "options": ["Gaya sentrifugal", "Gaya gravitasi", "Gaya gesek", "Gaya magnet"],
+        "answer": "Gaya sentrifugal",
+        "explanation": "Angin gradien memperhitungkan kelengkungan isobar, sehingga gaya sentrifugal ikut berperan dalam keseimbangan gaya yang bekerja pada partikel udara."
+    },
+    {
+        "question": "Hujan es terbentuk di dalam awan...",
+        "options": ["Kumulonimbus dengan updraft yang kuat", "Stratus yang tipis", "Sirus yang tinggi", "Altostratus"],
+        "answer": "Kumulonimbus dengan updraft yang kuat",
+        "explanation": "Butiran es terbentuk dan berulang kali terangkat oleh arus udara ke atas (updraft) yang kuat di dalam awan Kumulonimbus, mengumpulkan lapisan es hingga cukup berat untuk jatuh."
+    },
+    {
+        "question": "Lempeng tektonik yang paling aktif secara seismik dan vulkanik di dunia adalah...",
+        "options": ["Lempeng Pasifik", "Lempeng Eurasia", "Lempeng Afrika", "Lempeng Amerika Utara"],
+        "answer": "Lempeng Pasifik",
+        "explanation": "Lempeng Pasifik dikelilingi oleh Cincin Api (Ring of Fire), zona subduksi yang sangat aktif yang menyebabkan sebagian besar gempa bumi dan letusan gunung berapi di dunia."
+    },
+    {
+        "question": "Suhu udara biasanya diukur pada ketinggian standar ... di atas permukaan tanah untuk menghindari pengaruh panas dari tanah.",
+        "options": ["1.5 hingga 2 meter", "10 meter", "100 meter", "Tepat di permukaan"],
+        "answer": "1.5 hingga 2 meter",
+        "explanation": "Pengukuran suhu standar dilakukan dalam sangkar meteorologi (Stevenson screen) pada ketinggian sekitar 1.5-2 meter untuk mendapatkan representasi suhu udara yang akurat."
+    },
+    {
+        "question": "Jika Anda melihat kilat dan 10 detik kemudian mendengar guntur, perkiraan jarak badai dari Anda adalah sekitar...",
+        "options": ["3.4 kilometer", "1 kilometer", "10 kilometer", "34 kilometer"],
+        "answer": "3.4 kilometer",
+        "explanation": "Kecepatan suara di udara sekitar 343 meter per detik. Jadi, setiap 3 detik jeda antara kilat dan guntur mewakili jarak sekitar 1 kilometer (10 detik ≈ 3.4 km)."
+    },
+    {
+        "question": "Prakiraan cuaca numerik (NWP) dibuat dengan menggunakan...",
+        "options": ["Model matematika dan superkomputer", "Pengamatan visual awan", "Perilaku hewan", "Astrologi"],
+        "answer": "Model matematika dan superkomputer",
+        "explanation": "NWP menggunakan persamaan matematika kompleks yang menggambarkan fisika atmosfer untuk memprediksi keadaan cuaca di masa depan, yang membutuhkan kekuatan komputasi masif."
+    },
+    {
+        "question": "Awan Nacreous (Induk Mutiara) adalah awan langka yang terbentuk di...",
+        "options": ["Stratosfer kutub", "Troposfer tropis", "Mesosfer", "Termosfer"],
+        "answer": "Stratosfer kutub",
+        "explanation": "Awan Nacreous terbentuk pada suhu sangat dingin (di bawah -78°C) di stratosfer wilayah kutub dan terkenal karena warnanya yang seperti pelangi."
+    },
+    {
+        "question": "Kelembaban relatif 100% berarti...",
+        "options": ["Udara tidak dapat menampung uap air lagi", "Udara benar-benar kering", "Akan segera turun hujan salju", "Tekanan udara sangat tinggi"],
+        "answer": "Udara tidak dapat menampung uap air lagi",
+        "explanation": "Kelembaban relatif 100% menunjukkan bahwa udara telah jenuh dengan uap air. Jika suhu turun atau lebih banyak uap air ditambahkan, kondensasi (awan, kabut, embun) akan terjadi."
+    },
+    {
+        "question": "Angin Katabatik adalah angin yang bertiup...",
+        "options": ["Menuruni lereng karena pendinginan", "Naik ke lereng karena pemanasan", "Sejajar dengan garis pantai", "Dalam pola melingkar"],
+        "answer": "Menuruni lereng karena pendinginan",
+        "explanation": "Angin katabatik terjadi ketika udara di dataran tinggi atau gletser menjadi dingin, lebih padat, dan kemudian mengalir menuruni lereng karena gravitasi."
+    },
+    {
+        "question": "Sabana adalah bioma yang didominasi oleh...",
+        "options": ["Padang rumput dengan pohon yang tersebar", "Hutan lebat", "Gurun pasir", "Tundra beku"],
+        "answer": "Padang rumput dengan pohon yang tersebar",
+        "explanation": "Sabana memiliki musim kemarau yang jelas dan didominasi oleh rumput, dengan pohon dan semak yang tumbuh jarang dan tersebar."
+    },
+    {
+        "question": "Pada stasiun cuaca, simbol 'lingkaran dengan tiga garis horizontal' biasanya berarti...",
+        "options": ["Kabut", "Hujan deras", "Cerah", "Badai pasir"],
+        "answer": "Kabut",
+        "explanation": "Dalam penyandian cuaca (SYNOP), tiga garis horizontal adalah simbol standar internasional untuk kabut yang mengurangi jarak pandang."
+    },
+    {
+        "question": "Anomali gravitasi digunakan dalam geofisika untuk...",
+        "options": ["Mendeteksi variasi kepadatan di bawah permukaan bumi", "Mengukur kekuatan gempa", "Memprediksi cuaca", "Mencari sumber air"],
+        "answer": "Mendeteksi variasi kepadatan di bawah permukaan bumi",
+        "explanation": "Variasi kecil dalam medan gravitasi bumi (anomali) dapat mengindikasikan adanya struktur geologi seperti cekungan sedimen (potensi minyak) atau badan bijih logam yang padat."
+    },
+    {
+        "question": "Taman Nasional Komodo, tempat asli komodo, terletak di provinsi...",
+        "options": ["Nusa Tenggara Timur", "Nusa Tenggara Barat", "Bali", "Maluku"],
+        "answer": "Nusa Tenggara Timur",
+        "explanation": "Taman Nasional Komodo berada di antara pulau Sumbawa dan Flores, secara administratif masuk dalam wilayah Provinsi Nusa Tenggara Timur."
+    },
+    {
+        "question": "Proses perubahan es langsung menjadi uap air tanpa melalui fase cair disebut...",
+        "options": ["Sublimasi", "Kondensasi", "Mencair", "Deposisi"],
+        "answer": "Sublimasi",
+        "explanation": "Sublimasi adalah transisi fase langsung dari padat ke gas, seperti yang terjadi pada es kering (CO2 padat) atau salju di pegunungan pada kondisi tertentu."
+    },
+    {
+        "question": "Citra satelit inframerah berguna untuk memantau cuaca pada malam hari karena mendeteksi...",
+        "options": ["Panas (suhu)", "Cahaya tampak", "Warna awan", "Kelembaban"],
+        "answer": "Panas (suhu)",
+        "explanation": "Satelit inframerah mengukur radiasi panas yang dipancarkan oleh puncak awan dan permukaan bumi, sehingga dapat 'melihat' awan bahkan tanpa cahaya matahari."
+    },
+    {
+        "question": "Apa yang dimaksud dengan 'water-spout'?",
+        "options": ["Tornado yang terbentuk di atas air", "Geyser air panas", "Gelombang pasang", "Mata air di dasar laut"],
+        "answer": "Tornado yang terbentuk di atas air",
+        "explanation": "Water-spout adalah kolom udara berputar yang terbentuk di atas badan air, pada dasarnya adalah tornado di atas air, meskipun seringkali dengan skala yang lebih kecil."
+    },
+    {
+        "question": "Cincin Api Pasifik (Pacific Ring of Fire) adalah zona pertemuan...",
+        "options": ["Beberapa lempeng tektonik", "Tiga samudra utama", "Arus udara panas dan dingin", "Medan magnet bumi"],
+        "answer": "Beberapa lempeng tektonik",
+        "explanation": "Cincin Api adalah jalur berbentuk tapal kuda di sekitar Samudra Pasifik tempat banyak lempeng tektonik bertemu, menyebabkan aktivitas seismik dan vulkanik yang tinggi."
+    },
+    {
+        "question": "Dalam konteks penerbangan, 'turbulensi' mengacu pada...",
+        "options": ["Gerakan udara yang tidak teratur dan bergejolak", "Hujan es yang lebat", "Awan yang sangat tebal", "Perubahan tekanan kabin"],
+        "answer": "Gerakan udara yang tidak teratur dan bergejolak",
+        "explanation": "Turbulensi disebabkan oleh berbagai faktor seperti aliran udara di sekitar pegunungan, badai petir, atau pertemuan massa udara yang berbeda, menyebabkan guncangan pada pesawat."
+    },
+    {
+        "question": "Dampak utama dari pencairan gletser dan lapisan es di kutub akibat pemanasan global adalah...",
+        "options": ["Kenaikan permukaan air laut global", "Penurunan salinitas lautan", "Peningkatan aktivitas gempa", "Pergeseran kutub magnet"],
+        "answer": "Kenaikan permukaan air laut global",
+        "explanation": "Mencairnya es di daratan (gletser dan lapisan es) menambah volume air ke lautan, yang merupakan kontributor utama kenaikan permukaan laut global."
+    },
+    {
+        "question": "Indeks UV (Ultraviolet Index) memberikan informasi tentang...",
+        "options": ["Risiko bahaya dari paparan sinar matahari", "Suhu udara yang dirasakan", "Kemungkinan terjadinya hujan", "Tingkat polusi udara"],
+        "answer": "Risiko bahaya dari paparan sinar matahari",
+        "explanation": "Indeks UV mengukur intensitas radiasi UV dari matahari di suatu lokasi, memberikan skala risiko kerusakan kulit dan mata serta panduan perlindungan."
+    },
+    {
+        "question": "Hutan bakau (mangrove) penting secara ekologis karena...",
+        "options": ["Melindungi pantai dari erosi dan badai", "Menghasilkan kayu berkualitas tinggi", "Menjadi habitat utama harimau", "Tumbuh di pegunungan tinggi"],
+        "answer": "Melindungi pantai dari erosi dan badai",
+        "explanation": "Sistem akar mangrove yang rapat dan kompleks berfungsi sebagai benteng alami yang memecah energi gelombang, mengurangi erosi pantai, dan melindungi daratan dari gelombang badai."
+    },
+    {
+        "question": "Front cuaca adalah batas antara dua massa udara yang memiliki...",
+        "options": ["Suhu dan kelembaban yang berbeda", "Tekanan yang sama", "Arah angin yang sama", "Ketinggian yang sama"],
+        "answer": "Suhu dan kelembaban yang berbeda",
+        "explanation": "Ketika dua massa udara yang berbeda sifatnya (misalnya, dingin-kering dan hangat-lembab) bertemu, batasnya disebut front, di mana sering terbentuk awan dan presipitasi."
+    },
+    {
+        "question": "Stasiun Geofisika umumnya memantau aktivitas...",
+        "options": ["Gempa bumi, gravitasi, dan magnet bumi", "Cuaca, iklim, dan kualitas udara", "Arus laut dan pasang surut", "Kebakaran hutan dan lahan"],
+        "answer": "Gempa bumi, gravitasi, dan magnet bumi",
+        "explanation": "Geofisika berfokus pada aspek fisik Bumi, termasuk seismologi (gempa), geodesi (gravitasi), dan geomagnetisme (medan magnet Bumi)."
+    },
+    {
+        "question": "Awan Lentikularis (Lenticular clouds) sering terbentuk di...",
+        "options": ["Daerah pegunungan", "Gurun pasir yang datar", "Di atas lautan tropis", "Wilayah kutub"],
+        "answer": "Daerah pegunungan",
+        "explanation": "Awan ini terbentuk ketika udara yang stabil dan lembab mengalir di atas gunung, menciptakan gelombang udara stasioner. Awan ini sering disangka UFO karena bentuknya yang seperti piring."
+    },
+    {
+        "question": "Visibilitas dalam laporan cuaca mengacu pada...",
+        "options": ["Jarak pandang terjauh", "Kecerahan langit", "Ketinggian dasar awan", "Intensitas cahaya matahari"],
+        "answer": "Jarak pandang terjauh",
+        "explanation": "Visibilitas atau jarak pandang adalah jarak maksimum di mana sebuah objek dapat dilihat dan diidentifikasi, yang dapat berkurang karena kabut, hujan, atau polusi."
+    },
+    {
+        "question": "Sesar atau patahan dalam geologi adalah...",
+        "options": ["Retakan di kerak bumi tempat terjadinya pergeseran", "Lapisan batuan sedimen", "Lembah sungai yang dalam", "Kawah gunung berapi"],
+        "answer": "Retakan di kerak bumi tempat terjadinya pergeseran",
+        "explanation": "Sesar adalah bidang rekahan di mana telah terjadi pergerakan relatif antara dua blok batuan. Pergerakan tiba-tiba di sepanjang sesar inilah yang menyebabkan gempa bumi."
+    },
+    {
+        "question": "Angin geostropik adalah angin teoretis yang terjadi ketika gaya gradien tekanan seimbang sempurna dengan...",
+        "options": ["Gaya Coriolis", "Gaya gesek", "Gaya gravitasi", "Gaya sentripetal"],
+        "answer": "Gaya Coriolis",
+        "explanation": "Angin geostropik adalah model angin ideal di atmosfer atas (di mana gesekan diabaikan) yang bertiup sejajar dengan isobar lurus karena keseimbangan antara gaya gradien tekanan dan Coriolis."
+    }
+],
+"hard": [
+    {
+      "question": "Dalam klasifikasi iklim Köppen, wilayah dengan iklim hutan hujan tropis ditandai dengan kode...",
+      "options": ["Af", "Am", "Aw", "ET"],
+      "answer": "Af",
+      "explanation": "Dalam sistem klasifikasi iklim Köppen, 'Af' menandakan iklim hutan hujan tropis (Tropical rainforest climate), di mana curah hujan tinggi terjadi sepanjang tahun."
+    },
+    {
+      "question": "Angin Fohn adalah jenis angin yang bersifat panas dan kering. Apa penyebab utama sifat panas dari angin ini?",
+      "options": ["Pemanasan adiabatik saat menuruni lereng gunung", "Gesekan dengan permukaan tanah", "Radiasi matahari langsung", "Pengaruh lautan"],
+      "answer": "Pemanasan adiabatik saat menuruni lereng gunung",
+      "explanation": "Angin Fohn menjadi panas karena proses pemanasan adiabatik. Udara yang telah kehilangan uap airnya saat naik ke atas gunung, menjadi lebih padat dan suhunya meningkat secara signifikan saat menuruni lereng."
+    },
+    {
+      "question": "Apa yang dimaksud dengan 'Indian Ocean Dipole' (IOD)?",
+      "options": ["Osilasi suhu permukaan laut di Samudra Hindia", "Pola angin di atas Samudra Hindia", "Arus laut utama di Samudra Hindia", "Fenomena pasang surut di Samudra Hindia"],
+      "answer": "Osilasi suhu permukaan laut di Samudra Hindia",
+      "explanation": "Indian Ocean Dipole (IOD) adalah osilasi atau fluktuasi suhu permukaan laut yang tidak teratur di mana bagian barat Samudra Hindia menjadi lebih hangat (fase positif) atau lebih dingin (fase negatif) dari bagian timur."
+    },
+    {
+      "question": "Madden-Julian Oscillation (MJO) adalah pola pergerakan cuaca skala besar yang bergerak ke arah timur. Di wilayah mana MJO paling berpengaruh?",
+      "options": ["Wilayah tropis", "Wilayah kutub", "Gurun Sahara", "Pegunungan Himalaya"],
+      "answer": "Wilayah tropis",
+      "explanation": "MJO adalah gelombang cuaca tropis yang bergerak ke timur di sekitar khatulistiwa dengan siklus 30 hingga 60 hari, sangat mempengaruhi curah hujan dan pola angin di wilayah tropis."
+    },
+    {
+      "question": "Apa perbedaan utama antara siklon, topan (typhoon), dan badai (hurricane)?",
+      "options": ["Lokasi geografis terbentuknya", "Kecepatan anginnya", "Arah putarannya", "Ukuran diameternya"],
+      "answer": "Lokasi geografis terbentuknya",
+      "explanation": "Secara meteorologis, ketiganya adalah fenomena yang sama (siklon tropis). Perbedaannya hanya pada nama berdasarkan lokasi: 'hurricane' di Atlantik/Pasifik Timur Laut, 'typhoon' di Pasifik Barat Laut, dan 'cyclone' di Pasifik Selatan/Samudra Hindia."
+    },
+    {
+      "question": "Dalam meteorologi, 'adveksi' mengacu pada transfer ... oleh gerakan horizontal udara.",
+      "options": ["Properti seperti suhu atau kelembaban", "Tekanan saja", "Energi listrik", "Momentum sudut"],
+      "answer": "Properti seperti suhu atau kelembaban",
+      "explanation": "Adveksi adalah transpor suatu besaran (misalnya, suhu, kelembaban, vortisitas) oleh angin. Adveksi dingin, misalnya, berarti angin membawa udara yang lebih dingin ke suatu wilayah."
+    },
+    {
+      "question": "Vortisitas potensial (Potential Vorticity) adalah besaran yang ... dalam aliran fluida adiabatik dan bebas gesekan.",
+      "options": ["Dikoservasi (tetap)", "Selalu meningkat", "Selalu menurun", "Berfluktuasi secara acak"],
+      "answer": "Dikoservasi (tetap)",
+      "explanation": "Konservasi vortisitas potensial adalah prinsip fundamental dalam dinamika fluida geofisika. Ini membantu menjelaskan pembentukan dan intensifikasi sistem cuaca seperti siklon."
+    },
+    {
+      "question": "Perihelion adalah titik dalam orbit Bumi di mana Bumi berada paling ... dari Matahari.",
+      "options": ["Dekat", "Jauh", "Sejajar", "Tegak lurus"],
+      "answer": "Dekat",
+      "explanation": "Bumi mencapai perihelion (jarak terdekat dengan Matahari) sekitar awal Januari. Sebaliknya, aphelion adalah titik terjauh, yang terjadi sekitar awal Juli."
+    },
+    {
+      "question": "Hukum Buys Ballot menyatakan bahwa jika Anda berdiri dengan punggung menghadap angin di Belahan Bumi Utara, area tekanan rendah akan berada di...",
+      "options": ["Sebelah kiri Anda", "Sebelah kanan Anda", "Tepat di depan Anda", "Tepat di belakang Anda"],
+      "answer": "Sebelah kiri Anda",
+      "explanation": "Hukum ini adalah aturan praktis yang menghubungkan arah angin dengan lokasi pusat tekanan rendah dan tinggi, yang merupakan konsekuensi dari keseimbangan geostropik."
+    },
+    {
+      "question": "Apa yang dimaksud dengan 'nowcasting' dalam prakiraan cuaca?",
+      "options": ["Prakiraan cuaca untuk 0-6 jam ke depan", "Prakiraan cuaca untuk musim depan", "Prakiraan cuaca jangka panjang (10+ hari)", "Prakiraan iklim"],
+      "answer": "Prakiraan cuaca untuk 0-6 jam ke depan",
+      "explanation": "Nowcasting berfokus pada prakiraan cuaca yang sangat detail dan berjangka waktu sangat pendek, seringkali menggunakan data radar dan satelit untuk melacak badai secara real-time."
+    },
+    {
+      "question": "Persamaan primitif (primitive equations) dalam model cuaca numerik adalah seperangkat persamaan nonlinier yang menggambarkan...",
+      "options": ["Dinamika dan termodinamika atmosfer", "Reaksi kimia di stratosfer", "Medan magnet bumi", "Siklus karbon"],
+      "answer": "Dinamika dan termodinamika atmosfer",
+      "explanation": "Persamaan ini (termasuk persamaan momentum, kontinuitas, hidrostatik, dan termodinamika) membentuk dasar dari hampir semua model prakiraan cuaca modern."
+    },
+    {
+      "question": "CAPE (Convective Available Potential Energy) adalah ukuran dari...",
+      "options": ["Jumlah energi yang tersedia untuk konveksi (updraft)", "Jumlah uap air di atmosfer", "Stabilitas atmosfer", "Kecepatan angin vertikal"],
+      "answer": "Jumlah energi yang tersedia untuk konveksi (updraft)",
+      "explanation": "CAPE yang tinggi (diukur dalam Joule per kilogram) menunjukkan ketidakstabilan atmosfer yang kuat dan potensi badai petir yang hebat karena parsel udara yang naik akan jauh lebih hangat daripada lingkungannya."
+    },
+    {
+      "question": "Proses pembentukan awan yang paling umum adalah melalui pendinginan...",
+      "options": ["Adiabatik karena udara naik", "Konduktif dari permukaan dingin", "Radiatif pada malam hari", "Advektif di atas lautan"],
+      "answer": "Adiabatik karena udara naik",
+      "explanation": "Ketika udara naik, ia mengembang karena tekanan yang lebih rendah dan mendingin (pendinginan adiabatik). Jika mendingin hingga titik embun, uap air akan mengembun membentuk awan."
+    },
+    {
+      "question": "Dalam geofisika, diskontinuitas Mohorovičić (Moho) adalah batas antara...",
+      "options": ["Kerak bumi dan mantel", "Mantel dan inti luar", "Inti luar dan inti dalam", "Litosfer dan astenosfer"],
+      "answer": "Kerak bumi dan mantel",
+      "explanation": "Moho adalah batas yang terdefinisi oleh perubahan tajam dalam kecepatan gelombang seismik, yang mengindikasikan perubahan komposisi batuan dari kerak ke mantel."
+    },
+    {
+      "question": "Angin Barotropik adalah kondisi di mana permukaan tekanan konstan (isobarik) dan permukaan suhu konstan (isotermal)...",
+      "options": ["Sejajar", "Saling tegak lurus", "Berpotongan tajam", "Tidak berhubungan"],
+      "answer": "Sejajar",
+      "explanation": "Dalam atmosfer barotropik, tidak ada gradien suhu pada permukaan tekanan konstan (tidak ada adveksi suhu), dan gradien angin termal adalah nol. Ini adalah penyederhanaan dari atmosfer nyata (baroklinik)."
+    },
+    {
+      "question": "Frekuensi gelombang seismik yang lebih tinggi cenderung dilemahkan lebih ... daripada frekuensi rendah saat merambat melalui bumi.",
+      "options": ["Cepat", "Lambat", "Sama saja", "Tidak tentu"],
+      "answer": "Cepat",
+      "explanation": "Atenuasi atau pelemahan gelombang seismik bergantung pada frekuensi. Gelombang frekuensi tinggi kehilangan energinya lebih cepat, itulah sebabnya sinyal gempa jauh didominasi oleh frekuensi rendah."
+    },
+    {
+      "question": "Doksing adalah metode analisis dalam prakiraan cuaca yang melibatkan...",
+      "options": ["Membandingkan dan menggabungkan output dari beberapa model prakiraan", "Hanya menggunakan satu model terbaik", "Menggunakan data historis saja", "Melakukan pengamatan manual"],
+      "answer": "Membandingkan dan menggabungkan output dari beberapa model prakiraan",
+      "explanation": "Forecaster sering kali 'mengkonsultasikan' beberapa model (doksing) untuk memahami ketidakpastian prakiraan dan membuat keputusan yang lebih baik, daripada mempercayai satu output model saja."
+    },
+    {
+      "question": "Proses Bergeron-Findeisen adalah mekanisme penting untuk pertumbuhan ... di awan dingin.",
+      "options": ["Kristal es", "Tetesan air", "Muatan listrik", "Polutan"],
+      "answer": "Kristal es",
+      "explanation": "Proses ini menjelaskan bagaimana kristal es tumbuh dengan mengorbankan tetesan air superdingin di sekitarnya karena tekanan uap jenuh di atas es lebih rendah daripada di atas air cair pada suhu yang sama di bawah nol."
+    },
+    {
+      "question": "Siklus Milankovitch menjelaskan perubahan iklim jangka panjang (ribuan tahun) berdasarkan...",
+      "options": ["Variasi orbit Bumi", "Siklus bintik matahari", "Pergeseran lempeng tektonik", "Evolusi kehidupan"],
+      "answer": "Variasi orbit Bumi",
+      "explanation": "Siklus ini mencakup perubahan dalam eksentrisitas, kemiringan aksial, dan presesi orbit Bumi, yang secara kolektif mempengaruhi jumlah radiasi matahari yang diterima Bumi dan memicu zaman es."
+    },
+    {
+      "question": "Apa yang dimaksud dengan 'Dry Line' dalam meteorologi?",
+      "options": ["Batas antara massa udara lembab dan kering", "Batas antara massa udara panas dan dingin", "Garis curah hujan nol", "Isobar dengan tekanan tertinggi"],
+      "answer": "Batas antara massa udara lembab dan kering",
+      "explanation": "Dry line adalah front kelembaban yang tajam, sering ditemukan di AS bagian tengah, yang memisahkan udara lembab dari Teluk Meksiko dan udara kering dari gurun. Ini adalah lokasi pemicu yang kuat untuk badai petir hebat."
+    },
+    {
+        "question": "Asimilasi data dalam model prakiraan cuaca adalah proses...",
+        "options": ["Menggabungkan data observasi dengan keadaan model saat ini", "Menjalankan model tanpa data input", "Menghapus data yang salah", "Memvisualisasikan output model"],
+        "answer": "Menggabungkan data observasi dengan keadaan model saat ini",
+        "explanation": "Asimilasi data menggunakan teknik statistik canggih (seperti 4D-Var atau EnKF) untuk mengoreksi 'tebakan pertama' model dengan pengamatan dunia nyata, menciptakan kondisi awal yang paling akurat untuk prakiraan."
+    },
+    {
+        "question": "Equatorial Kelvin Wave (EKW) adalah gelombang atmosfer skala besar yang merambat ke ... dan berperan dalam dinamika El Niño.",
+        "options": ["Timur", "Barat", "Utara", "Selatan"],
+        "answer": "Timur",
+        "explanation": "Gelombang Kelvin Khatulistiwa, yang terperangkap di ekuator, merambat ke arah timur melintasi Samudra Pasifik dan dapat menekan termoklin, berkontribusi pada pemanasan permukaan laut selama peristiwa El Niño."
+    },
+    {
+        "question": "Teori 'Mode Anular' (Annular Mode) berkaitan dengan variasi tekanan dan angin di...",
+        "options": ["Garis lintang tengah dan tinggi", "Khatulistiwa saja", "Stratosfer saja", "Lautan dalam"],
+        "answer": "Garis lintang tengah dan tinggi",
+        "explanation": "Mode Anular, seperti Osilasi Arktik (AO), menggambarkan fluktuasi tekanan 'tarik-ulur' antara wilayah kutub dan garis lintang tengah, yang sangat mempengaruhi jalur badai."
+    },
+    {
+        "question": "Dalam dinamika fluida, bilangan Reynolds (Reynolds number) yang tinggi menunjukkan aliran yang...",
+        "options": ["Turbulen", "Laminar", "Stasioner", "Tidak dapat dimampatkan"],
+        "answer": "Turbulen",
+        "explanation": "Bilangan Reynolds adalah rasio antara gaya inersia dan gaya viskos. Nilai yang tinggi berarti gaya inersia dominan, yang mengarah pada aliran yang kacau dan turbulen, seperti yang umum terjadi di atmosfer."
+    },
+    {
+        "question": "Aerosol tidak langsung mempengaruhi iklim dengan cara...",
+        "options": ["Mengubah sifat mikro-fisik dan masa hidup awan", "Menyerap radiasi matahari", "Memantulkan radiasi matahari", "Menghancurkan ozon"],
+        "answer": "Mengubah sifat mikro-fisik dan masa hidup awan",
+        "explanation": "Efek tidak langsung aerosol (juga dikenal sebagai efek Twomey) terjadi ketika aerosol bertindak sebagai inti kondensasi awan, menghasilkan lebih banyak tetesan awan yang lebih kecil, membuat awan lebih cerah dan berpotensi lebih lama bertahan."
+    },
+    {
+        "question": "Dalam seismologi, 'shadow zone' (zona bayangan) gelombang-S adalah bukti bahwa...",
+        "options": ["Inti luar Bumi adalah cair", "Inti dalam Bumi adalah padat", "Mantel bersifat plastis", "Kerak bumi tidak seragam"],
+        "answer": "Inti luar Bumi adalah cair",
+        "explanation": "Gelombang-S (gelombang geser) tidak dapat merambat melalui fluida. Adanya zona bayangan S-wave yang luas di sisi berlawanan dari gempa menunjukkan bahwa inti luar Bumi haruslah cair."
+    },
+    {
+        "question": "Parameter Coriolis (f) bernilai nol di ... dan maksimum di ...",
+        "options": ["Khatulistiwa, kutub", "Kutub, khatulistiwa", "Garis bujur 0°, garis bujur 180°", "Permukaan, puncak atmosfer"],
+        "answer": "Khatulistiwa, kutub",
+        "explanation": "Parameter Coriolis didefinisikan sebagai f = 2Ω sin(φ), di mana Ω adalah kecepatan rotasi Bumi dan φ adalah garis lintang. Karena sin(0°)=0 dan sin(90°)=1, maka f adalah nol di khatulistiwa dan maksimum di kutub."
+    },
+    {
+        "question": "Angin termal adalah perbedaan vektor angin geostropik antara dua tingkat ketinggian, yang sebanding dengan...",
+        "options": ["Gradien suhu horizontal", "Gradien tekanan vertikal", "Kelembaban relatif", "Ketinggian geopotensial"],
+        "answer": "Gradien suhu horizontal",
+        "explanation": "Hubungan angin termal adalah dasar dari dinamika atmosfer. Ini menunjukkan bahwa jika ada gradien suhu horizontal (baroklinisitas), angin geostropik akan berubah seiring ketinggian (angin bergeser atau meningkat/menurun)."
+    },
+    {
+        "question": "Untuk memprakirakan tornado, seorang ahli meteorologi akan mencari parameter 'Storm Relative Helicity' (SRH) yang tinggi. Apa yang diukur oleh SRH?",
+        "options": ["Potensi rotasi dalam aliran masuk badai (inflow)", "Energi konvektif (CAPE)", "Kecepatan updraft badai", "Jumlah uap air"],
+        "answer": "Potensi rotasi dalam aliran masuk badai (inflow)",
+        "explanation": "SRH mengukur tingkat geseran angin vertikal (vertical wind shear) dalam kerangka acuan badai yang bergerak. Nilai SRH yang tinggi menunjukkan lingkungan yang sangat mendukung pembentukan mesosiklon yang berotasi, prekursor tornado."
+    },
+    {
+        "question": "Proses E-vector (Eliassen-Palm flux) digunakan dalam dinamika atmosfer untuk mendiagnosis...",
+        "options": ["Transfer momentum dan panas oleh gelombang atmosfer", "Pembentukan pelangi", "Siklus karbon dioksida", "Medan magnet bumi"],
+        "answer": "Transfer momentum dan panas oleh gelombang atmosfer",
+        "explanation": "Fluks Eliassen-Palm adalah alat diagnostik yang kuat untuk memahami bagaimana gelombang skala besar (seperti gelombang Rossby) berinteraksi dengan dan menggerakkan aliran rata-rata di atmosfer."
+    },
+    {
+        "question": "Dalam model iklim, 'parameterisasi' mengacu pada proses...",
+        "options": ["Mewakili proses skala kecil secara statistik", "Mengatur parameter awal model", "Mempercepat waktu komputasi", "Memvisualisasikan data output", "Menganalisis hasil simulasi"],
+        "answer": "Mewakili proses skala kecil secara statistik",
+        "explanation": "Proses seperti pembentukan awan konvektif terjadi pada skala yang terlalu kecil untuk diselesaikan secara eksplisit oleh model iklim global. Oleh karena itu, efeknya harus diaproksimasi (diparameterisasi) berdasarkan variabel skala besar model."
+    },
+    {
+        "question": "Quasi-Biennial Oscillation (QBO) adalah pembalikan arah angin secara periodik (sekitar 28 bulan) di...",
+        "options": ["Stratosfer tropis", "Troposfer kutub", "Permukaan laut Pasifik", "Inti luar Bumi", "Mesosfer"],
+        "answer": "Stratosfer tropis",
+        "explanation": "QBO adalah osilasi angin zonal (timur-barat) yang merambat ke bawah di stratosfer khatulistiwa, dan memiliki pengaruh halus terhadap sirkulasi atmosfer global dan cuaca."
+    },
+    {
+        "question": "Keseimbangan Hidrostatik dalam atmosfer adalah keseimbangan antara...",
+        "options": ["Gaya gradien tekanan vertikal dan gravitasi", "Gaya Coriolis dan gaya sentrifugal", "Gaya gesek dan gaya gradien tekanan", "Inersia dan viskositas", "Gaya apung dan gesek"],
+        "answer": "Gaya gradien tekanan vertikal dan gravitasi",
+        "explanation": "Untuk sebagian besar gerakan skala besar, gaya gradien tekanan yang mengarah ke atas hampir seimbang dengan gaya gravitasi yang mengarah ke bawah, mencegah atmosfer 'runtuh' atau 'lepas' ke angkasa."
+    },
+    {
+        "question": "Bilangan Froude (Froude number) digunakan dalam dinamika fluida untuk mengkarakterisasi aliran di sekitar...",
+        "options": ["Hambatan seperti gunung", "Sistem tekanan rendah", "Pusaran debu", "Arus laut dalam", "Garis pantai"],
+        "answer": "Hambatan seperti gunung",
+        "explanation": "Bilangan Froude adalah rasio antara kecepatan aliran dan kecepatan gelombang gravitasi. Ini menentukan apakah aliran akan melewati rintangan (gunung), terhalang, atau menghasilkan gelombang lee yang signifikan."
+    },
+    {
+        "question": "Jika sebuah parsel udara kering yang tidak jenuh bergerak ke atas, suhunya akan turun pada laju yang disebut...",
+        "options": ["Laju Selang Adiabatik Kering (Dry Adiabatic Lapse Rate)", "Laju Selang Adiabatik Basah", "Laju Selang Lingkungan", "Laju Selang Suhu", "Laju Selang Invers"],
+        "answer": "Laju Selang Adiabatik Kering (Dry Adiabatic Lapse Rate)",
+        "explanation": "Laju ini bernilai konstan sekitar 9.8 °C per kilometer. Ketika parsel menjadi jenuh dan kondensasi terjadi, pelepasan panas laten akan mengurangi laju pendinginan (menjadi laju selang adiabatik basah)."
+    },
+    {
+        "question": "Teori 'Potential Instability' atau 'Convective Instability' terjadi ketika ... menurun seiring dengan ketinggian.",
+        "options": ["Suhu bola basah potensial ekuivalen (Theta-e)", "Suhu potensial (Theta)", "Suhu aktual", "Tekanan", "Kelembaban mutlak"],
+        "answer": "Suhu bola basah potensial ekuivalen (Theta-e)",
+        "explanation": "Jika Theta-e (yang merupakan ukuran kandungan panas dan kelembaban) menurun seiring ketinggian, maka jika seluruh lapisan udara diangkat, ia akan menjadi tidak stabil secara konvektif, yang seringkali memicu badai petir yang parah."
+    },
+    {
+        "question": "Dalam prediksi ensemble, 'Spaghetti Plot' digunakan untuk memvisualisasikan...",
+        "options": ["Ketidakpastian dalam lintasan badai atau posisi fitur cuaca", "Suhu permukaan laut", "Kelembaban tanah", "Tebal salju", "Intensitas hujan"],
+        "answer": "Ketidakpastian dalam lintasan badai atau posisi fitur cuaca",
+        "explanation": "Spaghetti plot menggambar kontur tertentu (misalnya, ketinggian 500 hPa) dari setiap anggota ensemble. Jika garis-garisnya berdekatan, prakiraan lebih pasti. Jika menyebar seperti spaghetti, ketidakpastian tinggi."
+    },
+    {
+        "question": "Pada batas lempeng divergen di dasar laut, fitur geologis utama yang terbentuk adalah...",
+        "options": ["Punggungan tengah samudra (Mid-ocean ridge)", "Palung laut dalam (Trench)", "Busur kepulauan vulkanik (Volcanic arc)", "Pegunungan lipatan (Fold mountain)", "Zona subduksi"],
+        "answer": "Punggungan tengah samudra (Mid-ocean ridge)",
+        "explanation": "Di batas divergen, lempeng tektonik bergerak saling menjauh, memungkinkan magma dari mantel naik untuk membentuk kerak samudra baru, menciptakan sistem pegunungan bawah laut masif."
+    },
+    {
+        "question": "Dalam meteorologi radar, 'Hook Echo' adalah tanda khas yang sangat kuat dari...",
+        "options": ["Mesosiklon yang berotasi (prekursor tornado)", "Hujan sangat lebat", "Hujan es besar", "Turbulensi hebat", "Awan badai"],
+        "answer": "Mesosiklon yang berotasi (prekursor tornado)",
+        "explanation": "Hook echo terbentuk ketika presipitasi ditarik mengelilingi updraft yang berotasi (mesosiklon) di dalam badai supercell, menciptakan bentuk 'kait' pada gambar radar yang sering dikaitkan dengan pembentukan tornado."
+    },
+    {
+        "question": "Persamaan Vortisitas Barotropik (Barotropic Vorticity Equation) pada dasarnya menyatakan bahwa vortisitas absolut dikonservasi mengikuti gerakan fluida. Ini adalah dasar untuk menjelaskan pergerakan...",
+        "options": ["Gelombang Rossby skala sinoptik", "Siklon tropis skala meso", "Angin laut skala lokal", "Turbulensi skala mikro", "Gelombang gravitasi"],
+        "answer": "Gelombang Rossby skala sinoptik",
+        "explanation": "Persamaan ini menyederhanakan dinamika atmosfer dan sangat berguna dalam memahami propagasi (pergerakan) gelombang planet Rossby, yang merupakan lekukan besar dalam aliran jet stream."
+    }
+]
+}
