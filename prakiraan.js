@@ -159,81 +159,81 @@ async function generatePrakiraanImages() {
         <head>
           <style>
             body { 
-                margin: 0; padding: 0; width: 1200px; height: 1500px;
+                margin: 0; padding: 0; width: 1200px; height: 1800px;
                 background: ${BMKG_BG};
                 display: flex; align-items: center; justify-content: center;
-                padding: 12px 12px 18px 12px;
+                padding: 15px;
                 font-family: 'Tahoma', 'Verdana', sans-serif;
                 box-sizing: border-box;
             }
             .outer-container {
                 width: 100%; height: 100%;
                 background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-                border-radius: 28px;
-                box-shadow: 0 22px 60px rgba(15,23,42,0.14);
+                border-radius: 35px;
+                box-shadow: 0 30px 80px rgba(15,23,42,0.18);
                 overflow: hidden;
                 display: flex; flex-direction: column;
             }
             .header { 
-                padding: 16px 24px; 
+                padding: 24px 32px; 
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%); 
                 color: #f8fafc; 
-                display: flex; align-items: center; gap: 28px; 
+                display: flex; align-items: center; gap: 35px; 
             }
             .header-logo { 
-                width: 90px; height: 90px; border-radius: 24px; background: #e6f4ff; 
+                width: 110px; height: 110px; border-radius: 28px; background: #e6f4ff; 
                 display: flex; align-items: center; justify-content: center; 
-                border: 1px solid rgba(191,219,254,0.9); box-shadow: 0 2px 6px rgba(30,64,175,0.25);
+                border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 12px rgba(30,64,175,0.3);
             }
             .header-text { display: flex; flex-direction: column; }
-            .header-text h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; }
-            .header-text h2 { margin: 4px 0 0 0; font-size: 15px; color: #e0f2fe; font-weight: 700; }
+            .header-text h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 0.8px; }
+            .header-text h2 { margin: 6px 0 0 0; font-size: 22px; color: #e0f2fe; font-weight: 700; }
             .period-box {
-                margin-top: 8px; display: inline-flex; align-items: center; gap: 10px; 
-                font-size: 15px; font-weight: 800; background: rgba(148, 163, 184, 0.22); 
-                color: #f8fafc; padding: 7px 14px; border-radius: 999px;
+                margin-top: 12px; display: inline-flex; align-items: center; gap: 12px; 
+                font-size: 20px; font-weight: 800; background: rgba(148, 163, 184, 0.28); 
+                color: #f8fafc; padding: 10px 20px; border-radius: 999px;
             }
-            .table-container { padding: 10px 24px 0 24px; flex: 1; }
-            .table-inner { border: 1px solid #d1d5db; border-radius: 18px; background: #f9fafb; overflow: hidden; }
-            table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; color: rgba(0,0,0,0.95); }
+            .table-container { padding: 15px 24px 0 24px; flex: 1; }
+            .table-inner { border: 2px solid #d1d5db; border-radius: 22px; background: #f9fafb; overflow: hidden; }
+            table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 16px; color: rgba(0,0,0,0.95); }
             th { 
-                font-family: 'Arial', sans-serif; padding: 10px 8px; font-size: 15.5px; font-weight: 900; 
-                letter-spacing: 0.6px; text-align: center; border-right: 1px solid rgba(191,219,254,0.45);
-                color: #f8fafc; text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+                font-family: 'Arial', sans-serif; padding: 14px 10px; font-size: 19px; font-weight: 900; 
+                letter-spacing: 0.8px; text-align: center; border-right: 1px solid rgba(255,255,255,0.2);
+                color: #f8fafc; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
             }
-            td { padding: 5px 6px; text-align: center; border-right: 1px solid rgba(148,163,184,0.2); border-bottom: 1px solid rgba(148,163,184,0.2); }
-            .td-kec { padding: 6px 8px; font-size: 14px; font-weight: 800; text-align: center; }
-            .td-value { font-weight: 700; }
-            .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
-            .icon-wrapper img { width: 32px; height: 32px; }
+            td { padding: 8px 6px; text-align: center; border-right: 1px solid rgba(148,163,184,0.25); border-bottom: 1px solid rgba(148,163,184,0.25); }
+            .td-kec { padding: 10px 12px; font-size: 20px; font-weight: 900; text-align: left; background: #f1f5f9; color: #0f172a; }
+            .td-value { font-size: 18px; font-weight: 800; }
+            .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
+            .icon-wrapper img { width: 44px; height: 44px; }
 
-            .legend-container { padding: 0px 18px 0px 18px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
-            .dev-label { font-size: 10px; color: #6b7280; margin-bottom: 2px; text-align: center; font-weight: 600; }
+            .legend-container { padding: 10px 24px 20px 24px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
+            .dev-label { font-size: 14px; color: #6b7280; margin-bottom: 6px; text-align: center; font-weight: 700; }
             .legend-block { 
-                border-radius: 10px; background: ${BMKG_PRIMARY}; padding: 6px 8px; margin-top: 2px; 
-                width: 96%; align-self: center; color: #eaf2ff; border: 1px solid rgba(191,219,254,0.35);
-                display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; align-items: center;
+                border-radius: 15px; background: ${BMKG_PRIMARY}; padding: 12px 15px; margin-top: 5px; 
+                width: 100%; align-self: center; color: #eaf2ff; border: 1px solid rgba(191,219,254,0.4);
+                display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 15px; align-items: center;
             }
-            .legend-item { display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: center; padding: 2px 0; }
-            .legend-icon-box { width: 28px; height: 28px; border-radius: 6px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.45); }
-            .legend-icon-box img { width: 20px; height: 20px; }
-            .legend-text { font-size: 11px; font-weight: 800; color: #eaf2ff; text-align: center; line-height: 1.1; }
+            .legend-item { display: flex; flex-direction: column; align-items: center; gap: 6px; justify-content: center; padding: 4px 0; }
+            .legend-icon-box { width: 40px; height: 40px; border-radius: 10px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.5); }
+            .legend-icon-box img { width: 30px; height: 30px; }
+            .legend-text { font-size: 15px; font-weight: 900; color: #eaf2ff; text-align: center; line-height: 1.2; }
 
             .footer-banner {
-                width: 100%; padding: 16px 24px; margin-top: 8px;
+                width: 100%; padding: 20px 32px; margin-top: 15px;
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
                 color: #f8fafc; border: 1px solid rgba(191,219,254,0.4);
-                box-shadow: 0 10px 25px rgba(15,23,42,0.15);
-                text-align: center; font-size: 15.5px; font-weight: 900; letter-spacing: 0.3px;
-                box-sizing: border-box;
+                box-shadow: 0 10px 30px rgba(15,23,42,0.2);
+                text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 0.5px;
+                box-sizing: border-box; border-radius: 15px;
             }
           </style>
         </head>
         <body>
           <div class="outer-container">
             <div class="header">
-              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="70"></div>
+              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="85"></div>
               <div class="header-text">
                 <h1>BMKG - Stasiun Meteorologi Pangsuma Kapuas Hulu</h1>
                 <h2>Prakiraan Cuaca Kabupaten Kapuas Hulu ${titleSuffix}</h2>
@@ -249,12 +249,12 @@ async function generatePrakiraanImages() {
                 <table>
                   <thead>
                     <tr>
-                      <th style="width: 220px; border-top-left-radius: 18px;">KECAMATAN</th>
+                      <th style="width: 240px; border-top-left-radius: 20px;">KECAMATAN</th>
                       ${hoursHeader.map(h => `<th>${h}</th>`).join('')}
                       <th>SUHU</th>
-                      <th>KELEMBAPAN</th>
+                      <th>RH</th>
                       <th>ANGIN</th>
-                      <th style="border-top-right-radius: 18px; border-right: none;">KECEPATAN</th>
+                      <th style="border-top-right-radius: 20px; border-right: none;">SPD</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -264,11 +264,11 @@ async function generatePrakiraanImages() {
                         ${r.cuaca.map(c => `
                             <td>
                                 <div class="icon-wrapper">
-                                    ${c.icon ? `<img src="${c.icon}">` : `<span style="font-size: 11px;">${c.text}</span>`}
+                                    ${c.icon ? `<img src="${c.icon}">` : `<span style="font-size: 14px;">${c.text}</span>`}
                                 </div>
                             </td>`).join('')}
-                        <td class="td-value">${r.suhu}</td>
-                        <td class="td-value">${r.rh}</td>
+                        <td class="td-value" style="color: #b91c1c;">${r.suhu}</td>
+                        <td class="td-value" style="color: #1d4ed8;">${r.rh}</td>
                         <td class="td-value">${r.arah}</td>
                         <td class="td-value" style="border-right: none;">${r.angin}</td>
                       </tr>
@@ -304,7 +304,7 @@ async function generatePrakiraanImages() {
             html: html,
             puppeteerArgs: {
                 executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1200,1500']
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1200,1800']
             }
         });
         results.push(outputFile);
