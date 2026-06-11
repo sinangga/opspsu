@@ -181,24 +181,24 @@ async function generatePrakiraanImages() {
                 color: #f8fafc; 
                 display: flex; align-items: center; justify-content: space-between; 
             }
+            .header-left { display: flex; align-items: center; gap: 20px; }
             .header-logo { 
                 width: 80px; height: 80px; border-radius: 18px; background: #e6f4ff; 
                 display: flex; align-items: center; justify-content: center; 
                 border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 10px rgba(30,64,175,0.25);
             }
-            .evp-logo { height: 80px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-            
-            .header-center { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-            .header-center h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 0.5px; }
-            .header-center h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
+            .header-text { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+            .header-text h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 0.5px; }
+            .header-text h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
             
             .period-box {
-                margin-top: 10px; display: inline-flex; align-items: center; 
+                margin-top: 8px; display: inline-flex; align-items: center; 
                 font-size: 18px; font-weight: 800; background: rgba(255, 255, 255, 0.95); 
                 color: #1e40af; padding: 6px 16px; border-radius: 12px;
                 box-shadow: 0 4px 10px rgba(0,0,0,0.1);
                 border: 1px solid rgba(255,255,255,0.5);
             }
+            .evp-logo { height: 80px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 
             .table-container { padding: 10px 20px 0 20px; flex: 1; overflow: hidden; }
             .table-inner { border: 1.5px solid #d1d5db; border-radius: 18px; background: #f9fafb; overflow: hidden; }
@@ -233,13 +233,15 @@ async function generatePrakiraanImages() {
         <body>
           <div class="outer-container">
             <div class="header">
-              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="60"></div>
-              <div class="header-center">
-                  <h1>Stasiun Meteorologi Pangsuma</h1>
-                  <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
-                  <div class="period-box">
-                  <span>${dateLabel}</span>
-                  </div>
+              <div class="header-left">
+                <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="60"></div>
+                <div class="header-text">
+                    <h1>Stasiun Meteorologi Pangsuma</h1>
+                    <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
+                    <div class="period-box">
+                    <span>${dateLabel}</span>
+                    </div>
+                </div>
               </div>
               <img src="data:image/png;base64,${evpLogo}" class="evp-logo">
             </div>
