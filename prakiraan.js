@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 
 const BASE = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=61.06.';
-const EVP_LOGO_URL = 'https://www.menpan.go.id/site/images/berita_foto_backup/2021/sipanday_berakhlak_bangga-melayani-bangsa/Logo_EVP.png';
 
 const STATUS_TO_ICON = {
     'Cerah': 'cerah-am.png',
@@ -98,14 +97,9 @@ async function generatePrakiraanImages() {
     const rawData = await fetchPrakiraanBatch();
     const processed = processDataByDate(rawData);
     
-    // Fetch EVP Logo
-    let evpLogoBase64 = '';
-    try {
-        const evpResp = await axios.get(EVP_LOGO_URL, { responseType: 'arraybuffer', timeout: 10000 });
-        evpLogoBase64 = `data:image/png;base64,${Buffer.from(evpResp.data).toString('base64')}`;
-    } catch (e) {
-        console.error('EVP LOGO FETCH ERR:', e.message);
-    }
+    // Load local assets
+    const bmkgLogo = fs.readFileSync(path.join(__dirname, 'DashboardNextJS', 'public', 'bmkg.png')).toString('base64');
+    const evpLogo = fs.readFileSync(path.join(__dirname, 'DashboardNextJS', 'public', 'bangga.png')).toString('base64');
 
     const allDates = new Set();
     for (const dailyMap of processed.values()) {
@@ -114,8 +108,6 @@ async function generatePrakiraanImages() {
     const sortedDates = Array.from(allDates).sort();
     
     const results = [];
-    const bmkgLogo = fs.readFileSync(path.join(__dirname, 'DashboardNextJS', 'public', 'bmkg.png')).toString('base64');
-
     const BMKG_DARK = '#0f172a';
     const BMKG_PRIMARY = '#1e40af';
     const BMKG_ACCENT = '#38bdf8';
@@ -251,7 +243,7 @@ async function generatePrakiraanImages() {
                 </div>
               </div>
               <div class="header-right">
-                ${evpLogoBase64 ? `<img src="${evpLogoBase64}" class="evp-logo">` : ''}
+                ${evpLogo ? `<img src="data:image/png;base64,${evpLogo}" class="evp-logo">` : ''}
               </div>
             </div>
 
