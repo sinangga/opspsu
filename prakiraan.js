@@ -176,22 +176,21 @@ async function generatePrakiraanImages() {
                 display: flex; flex-direction: column;
             }
             .header { 
-                padding: 18px 25px; 
+                padding: 18px 30px; 
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%); 
                 color: #f8fafc; 
                 display: flex; align-items: center; justify-content: space-between; 
             }
-            .header-left { display: flex; align-items: center; gap: 15px; }
             .header-logo { 
-                width: 75px; height: 75px; border-radius: 18px; background: #e6f4ff; 
+                width: 80px; height: 80px; border-radius: 18px; background: #e6f4ff; 
                 display: flex; align-items: center; justify-content: center; 
                 border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 10px rgba(30,64,175,0.25);
             }
-            .evp-logo { height: 75px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+            .evp-logo { height: 80px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
             
-            .header-right { display: flex; flex-direction: column; align-items: flex-end; text-align: right; flex: 1; }
-            .header-right h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; }
-            .header-right h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
+            .header-center { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
+            .header-center h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 0.5px; }
+            .header-center h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
             
             .period-box {
                 margin-top: 10px; display: inline-flex; align-items: center; 
@@ -234,19 +233,15 @@ async function generatePrakiraanImages() {
         <body>
           <div class="outer-container">
             <div class="header">
-              <div class="header-left">
-                <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="55"></div>
-                <img src="data:image/png;base64,${evpLogo}" class="evp-logo">
+              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="60"></div>
+              <div class="header-center">
+                  <h1>Stasiun Meteorologi Pangsuma</h1>
+                  <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
+                  <div class="period-box">
+                  <span>${dateLabel}</span>
+                  </div>
               </div>
-              <div class="header-right">
-                <div class="header-text">
-                    <h1>Stasiun Meteorologi Pangsuma</h1>
-                    <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
-                    <div class="period-box">
-                    <span>${dateLabel}</span>
-                    </div>
-                </div>
-              </div>
+              <img src="data:image/png;base64,${evpLogo}" class="evp-logo">
             </div>
 
             <div class="table-container">
