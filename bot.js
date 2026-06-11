@@ -6,7 +6,7 @@ const schedule = require('node-schedule');
 const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
-const { generatePrakiraanImage } = require('./prakiraan');
+const { generatePrakiraanImages } = require('./prakiraan');
 
 // ================= CONFIG =================
 const TOKEN = process.env.BOT_TOKEN;
@@ -447,10 +447,12 @@ bot.on('message', async (msg) => {
     if (text === '☁️ Prakiraan') {
         const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
         try {
-            const out = `prakiraan_${Date.now()}.png`;
-            await generatePrakiraanImage(out);
-            await bot.sendPhoto(cid, fs.readFileSync(out), { caption: '☁️ *Prakiraan Cuaca Kabupaten Kapuas Hulu*', parse_mode: 'Markdown' });
-            fs.unlinkSync(out);
+            const files = await generatePrakiraanImages();
+            for (const file of files) {
+                const caption = file.includes('_h0_') ? '☁️ *Prakiraan Cuaca Hari Ini*' : '☁️ *Prakiraan Cuaca Besok (H+1)*';
+                await bot.sendPhoto(cid, fs.readFileSync(file), { caption, parse_mode: 'Markdown' });
+                fs.unlinkSync(file);
+            }
             bot.deleteMessage(cid, ldr.message_id).catch(() => {});
         } catch (e) {
             console.error('PRAKIRAAN ERR:', e.message);

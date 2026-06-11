@@ -1,10 +1,10 @@
-const { generatePrakiraanImage } = require('./prakiraan');
+const { generatePrakiraanImages } = require('./prakiraan');
 
 async function test() {
-    console.log('Generating test infographic...');
+    console.log('Generating test infographics (Today & Tomorrow)...');
     try {
-        await generatePrakiraanImage('test_prakiraan.png');
-        console.log('Success! Image saved to test_prakiraan.png');
+        const files = await generatePrakiraanImages();
+        console.log('Success! Images saved:', files);
     } catch (e) {
         console.error('Failed:', e.message);
     }
