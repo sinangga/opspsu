@@ -13,20 +13,29 @@ const STATUS_TO_ICON = {
     'Cerah Berawan': 'cerah berawan-am.png',
     'Hujan Lebat': 'hujan lebat-am.png',
     'Hujan Sedang': 'hujan sedang-am.png',
-    'Kabut': 'kabut-am.png',
-    'Asap': 'kabut-am.png',
     'Kabut/Asap': 'kabut-am.png',
     'Berawan': 'cerah berawan-am.png',
-    'Berawan Tebal': 'cerah berawan-am.png',
     'Udara Kabur': 'udara-kabur.png'
 };
+
+const ICON_ORDER = [
+    'Cerah',
+    'Cerah Berawan',
+    'Berawan',
+    'Kabut/Asap',
+    'Udara Kabur',
+    'Hujan Ringan',
+    'Hujan Sedang',
+    'Hujan Lebat',
+    'Hujan Petir',
+    'Petir',
+];
 
 const ICON_DIR = path.join(__dirname, 'DashboardNextJS', 'public', 'icon');
 
 function getBase64Icon(status) {
     let filename = STATUS_TO_ICON[status];
     if (!filename) {
-        // Fallback search
         const norm = status.toLowerCase().trim();
         if (norm.includes('hujan') && norm.includes('petir')) filename = STATUS_TO_ICON['Hujan Petir'];
         else if (norm.includes('hujan') && norm.includes('ringan')) filename = STATUS_TO_ICON['Hujan Ringan'];
@@ -55,7 +64,6 @@ async function fetchPrakiraanBatch() {
         `${BASE}17.1001`,
         ...suffixes18_23.map((s) => BASE + s),
     ];
-    // Fetch all kecamatan
     const resps = await Promise.all(
         urls.map((u) => axios.get(u, { timeout: 15000 }).then((r) => r.data).catch(e => null))
     );
@@ -63,16 +71,12 @@ async function fetchPrakiraanBatch() {
 }
 
 function processDataByDate(raw) {
-    // raw is the array of responses for all kecamatan
     const byKec = new Map();
     for (const r of raw) {
         const name = r?.lokasi?.kecamatan;
-        const cuacaGroups = r?.data?.[0]?.cuaca; // Array of arrays
+        const cuacaGroups = r?.data?.[0]?.cuaca;
         if (!name || !cuacaGroups) continue;
-
         const flatEntries = cuacaGroups.flat().sort((a, b) => a.local_datetime.localeCompare(b.local_datetime));
-        
-        // Group by local date string
         const daily = new Map();
         for (const entry of flatEntries) {
             const dateStr = entry.local_datetime.split(' ')[0];
@@ -93,7 +97,6 @@ async function generatePrakiraanImages() {
     const rawData = await fetchPrakiraanBatch();
     const processed = processDataByDate(rawData);
     
-    // Get unique dates available in the data
     const allDates = new Set();
     for (const dailyMap of processed.values()) {
         for (const date of dailyMap.keys()) allDates.add(date);
@@ -103,7 +106,11 @@ async function generatePrakiraanImages() {
     const results = [];
     const bmkgLogo = fs.readFileSync(path.join(__dirname, 'DashboardNextJS', 'public', 'bmkg.png')).toString('base64');
 
-    // Generate for Day 1 (H+0) and Day 2 (H+1)
+    const BMKG_DARK = '#0f172a';
+    const BMKG_PRIMARY = '#1e40af';
+    const BMKG_ACCENT = '#38bdf8';
+    const BMKG_BG = '#ecf5fb';
+
     for (let i = 0; i < 2; i++) {
         const targetDate = sortedDates[i];
         if (!targetDate) continue;
@@ -112,15 +119,13 @@ async function generatePrakiraanImages() {
         const dateLabel = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         const titleSuffix = i === 0 ? "(Hari Ini)" : "(Besok)";
 
-        // Build rows for this date
         const rows = [];
         const sortedKec = Array.from(processed.keys()).sort((a, b) => a.localeCompare(b, 'id-ID'));
         
-        // Find common hours for the header from the first kecamatan that has data for this date
         let hoursHeader = [];
         for (const kec of sortedKec) {
             const dayData = processed.get(kec).get(targetDate);
-            if (dayData && dayData.length >= 4) { // usually 8 slots, but take what we have
+            if (dayData && dayData.length >= 4) {
                 hoursHeader = dayData.slice(0, 8).map(d => d.local_datetime.split(' ')[1].substring(0, 5));
                 break;
             }
@@ -129,13 +134,11 @@ async function generatePrakiraanImages() {
         for (const kec of sortedKec) {
             const dayData = processed.get(kec).get(targetDate);
             if (!dayData) continue;
-
             const slice = dayData.slice(0, 8);
             const suhu = slice.map(d => d.t);
             const rh = slice.map(d => d.hu);
             const ws = slice.map(d => d.ws);
             const wd = slice.map(d => d.wd);
-
             const mode = (arr) => arr.sort((a, b) => arr.filter(v => v===a).length - arr.filter(v => v===b).length).pop() || '';
 
             rows.push({
@@ -148,6 +151,7 @@ async function generatePrakiraanImages() {
             });
         }
 
+        const legendItems = ICON_ORDER.map(label => ({ label, icon: getBase64Icon(label) }));
         const outputFile = `prakiraan_h${i}_${Date.now()}.png`;
 
         const html = `
@@ -155,130 +159,141 @@ async function generatePrakiraanImages() {
         <head>
           <style>
             body { 
-                font-family: 'Tahoma', 'Verdana', sans-serif; 
-                background: #ecf5fb; 
-                margin: 0; 
-                padding: 15px; 
-                width: 1200px;
+                margin: 0; padding: 0; width: 1200px; height: 1500px;
+                background: ${BMKG_BG};
+                display: flex; align-items: center; justify-content: center;
+                padding: 12px 12px 18px 12px;
+                font-family: 'Tahoma', 'Verdana', sans-serif;
                 box-sizing: border-box;
             }
-            .container { 
-                background: white; 
-                border-radius: 28px; 
-                box-shadow: 0 22px 60px rgba(15,23,42,0.15); 
-                overflow: hidden; 
-                display: flex; 
-                flex-direction: column;
-                min-height: 1200px;
+            .outer-container {
+                width: 100%; height: 100%;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                border-radius: 28px;
+                box-shadow: 0 22px 60px rgba(15,23,42,0.14);
+                overflow: hidden;
+                display: flex; flex-direction: column;
             }
             .header { 
-                padding: 18px 25px; 
-                background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #38bdf8 100%); 
+                padding: 16px 24px; 
+                background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%); 
                 color: #f8fafc; 
-                display: flex; 
-                align-items: center; 
-                gap: 25px; 
+                display: flex; align-items: center; gap: 28px; 
             }
             .header-logo { 
-                width: 85px; height: 85px; 
-                background: #e6f4ff; 
-                border-radius: 22px; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                width: 90px; height: 90px; border-radius: 24px; background: #e6f4ff; 
+                display: flex; align-items: center; justify-content: center; 
+                border: 1px solid rgba(191,219,254,0.9); box-shadow: 0 2px 6px rgba(30,64,175,0.25);
             }
-            .header-text h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; }
-            .header-text h2 { margin: 4px 0 0 0; font-size: 16px; color: #bae6fd; font-weight: 700; }
-            .period { 
-                margin-top: 10px; 
-                background: rgba(148,163,184,0.25); 
-                padding: 6px 16px; 
-                border-radius: 20px; 
-                display: inline-block; 
-                font-size: 14px; 
-                font-weight: 800;
-                color: #f8fafc;
+            .header-text { display: flex; flex-direction: column; }
+            .header-text h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; }
+            .header-text h2 { margin: 4px 0 0 0; font-size: 15px; color: #e0f2fe; font-weight: 700; }
+            .period-box {
+                margin-top: 8px; display: inline-flex; align-items: center; gap: 10px; 
+                font-size: 15px; font-weight: 800; background: rgba(148, 163, 184, 0.22); 
+                color: #f8fafc; padding: 7px 14px; border-radius: 999px;
             }
-            table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border: 1px solid #d1d5db; border-radius: 18px; overflow: hidden; }
+            .table-container { padding: 10px 24px 0 24px; flex: 1; }
+            .table-inner { border: 1px solid #d1d5db; border-radius: 18px; background: #f9fafb; overflow: hidden; }
+            table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; color: rgba(0,0,0,0.95); }
             th { 
-                background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%); 
-                color: white; 
-                padding: 14px 8px; 
-                font-size: 13px; 
-                border-right: 1px solid rgba(255,255,255,0.1);
-                text-align: center;
+                font-family: 'Arial', sans-serif; padding: 10px 8px; font-size: 15.5px; font-weight: 900; 
+                letter-spacing: 0.6px; text-align: center; border-right: 1px solid rgba(191,219,254,0.45);
+                color: #f8fafc; text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+                background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
             }
-            td { 
-                padding: 10px 5px; 
-                text-align: center; 
-                border-bottom: 1px solid #e2e8f0; 
-                border-right: 1px solid #e2e8f0;
-                font-size: 13px; 
-                font-weight: 700;
-                color: #1e293b;
+            td { padding: 5px 6px; text-align: center; border-right: 1px solid rgba(148,163,184,0.2); border-bottom: 1px solid rgba(148,163,184,0.2); }
+            .td-kec { padding: 6px 8px; font-size: 14px; font-weight: 800; text-align: center; }
+            .td-value { font-weight: 700; }
+            .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+            .icon-wrapper img { width: 32px; height: 32px; }
+
+            .legend-container { padding: 0px 18px 0px 18px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
+            .dev-label { font-size: 10px; color: #6b7280; margin-bottom: 2px; text-align: center; font-weight: 600; }
+            .legend-block { 
+                border-radius: 10px; background: ${BMKG_PRIMARY}; padding: 6px 8px; margin-top: 2px; 
+                width: 96%; align-self: center; color: #eaf2ff; border: 1px solid rgba(191,219,254,0.35);
+                display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; align-items: center;
             }
-            .kec-name { 
-                text-align: left; 
-                padding-left: 20px; 
-                background: #f8fafc; 
-                width: 180px;
-                color: #0f172a;
-                font-weight: 800;
+            .legend-item { display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: center; padding: 2px 0; }
+            .legend-icon-box { width: 28px; height: 28px; border-radius: 6px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.45); }
+            .legend-icon-box img { width: 20px; height: 20px; }
+            .legend-text { font-size: 11px; font-weight: 800; color: #eaf2ff; text-align: center; line-height: 1.1; }
+
+            .footer-banner {
+                width: 100%; padding: 16px 24px; margin-top: 8px;
+                background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
+                color: #f8fafc; border: 1px solid rgba(191,219,254,0.4);
+                box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+                text-align: center; font-size: 15.5px; font-weight: 900; letter-spacing: 0.3px;
+                box-sizing: border-box;
             }
-            .icon-cell { width: 65px; }
-            .icon-cell img { width: 34px; height: 34px; }
-            .icon-label { font-size: 10px; font-weight: 400; color: #64748b; margin-top: 2px; }
-            .footer { 
-                padding: 15px; 
-                background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%); 
-                color: white; 
-                text-align: center; 
-                font-weight: 900; 
-                font-size: 16px;
-                margin-top: auto;
-            }
-            tr:last-child td { border-bottom: none; }
           </style>
         </head>
         <body>
-          <div class="container">
+          <div class="outer-container">
             <div class="header">
-              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="65"></div>
+              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="70"></div>
               <div class="header-text">
                 <h1>BMKG - Stasiun Meteorologi Pangsuma Kapuas Hulu</h1>
                 <h2>Prakiraan Cuaca Kabupaten Kapuas Hulu ${titleSuffix}</h2>
-                <div class="period">Berlaku: ${dateLabel}</div>
+                <div class="period-box">
+                  <span>Berlaku</span>
+                  <span style="color: #bae6fd;">${dateLabel}</span>
+                </div>
               </div>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 180px;">KECAMATAN</th>
-                  ${hoursHeader.map(h => `<th>${h}</th>`).join('')}
-                  <th>SUHU</th>
-                  <th>RH</th>
-                  <th>ANGIN</th>
-                  <th style="border-right: none;">SPD</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows.map((r, idx) => `
-                  <tr style="background: ${idx % 2 === 1 ? '#ffffff' : '#f1f5f9'}">
-                    <td class="kec-name">${r.name}</td>
-                    ${r.cuaca.map(c => `
-                        <td class="icon-cell">
-                            ${c.icon ? `<img src="${c.icon}">` : `<div style="font-size: 11px;">${c.text}</div>`}
-                        </td>`).join('')}
-                    <td style="color: #b91c1c;">${r.suhu}</td>
-                    <td style="color: #1d4ed8;">${r.rh}</td>
-                    <td>${r.arah}</td>
-                    <td style="border-right: none;">${r.angin}</td>
-                  </tr>
+
+            <div class="table-container">
+              <div class="table-inner">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 220px; border-top-left-radius: 18px;">KECAMATAN</th>
+                      ${hoursHeader.map(h => `<th>${h}</th>`).join('')}
+                      <th>SUHU</th>
+                      <th>KELEMBAPAN</th>
+                      <th>ANGIN</th>
+                      <th style="border-top-right-radius: 18px; border-right: none;">KECEPATAN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.map((r, idx) => `
+                      <tr style="background: ${idx % 2 === 1 ? '#ffffff' : '#eef5ff'}">
+                        <td class="td-kec">${r.name}</td>
+                        ${r.cuaca.map(c => `
+                            <td>
+                                <div class="icon-wrapper">
+                                    ${c.icon ? `<img src="${c.icon}">` : `<span style="font-size: 11px;">${c.text}</span>`}
+                                </div>
+                            </td>`).join('')}
+                        <td class="td-value">${r.suhu}</td>
+                        <td class="td-value">${r.rh}</td>
+                        <td class="td-value">${r.arah}</td>
+                        <td class="td-value" style="border-right: none;">${r.angin}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="legend-container">
+              <div class="dev-label">developed by Sinangga</div>
+              <div class="legend-block">
+                ${legendItems.map(li => `
+                  <div class="legend-item">
+                    <div class="legend-icon-box">
+                      ${li.icon ? `<img src="${li.icon}">` : ''}
+                    </div>
+                    <span class="legend-text">${li.label}</span>
+                  </div>
                 `).join('')}
-              </tbody>
-            </table>
-            <div class="footer">Stasiun Meteorologi Pangsuma – Kapuas Hulu</div>
+              </div>
+              <div class="footer-banner">
+                Stasiun Meteorologi Pangsuma – Kapuas Hulu
+              </div>
+            </div>
           </div>
         </body>
         </html>
