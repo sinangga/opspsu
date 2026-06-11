@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const BASE = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=61.06.';
+const EVP_LOGO_URL = 'https://www.menpan.go.id/site/images/berita_foto_backup/2021/sipanday_berakhlak_bangga-melayani-bangsa/Logo_EVP.png';
 
 const STATUS_TO_ICON = {
     'Cerah': 'cerah-am.png',
@@ -97,6 +98,15 @@ async function generatePrakiraanImages() {
     const rawData = await fetchPrakiraanBatch();
     const processed = processDataByDate(rawData);
     
+    // Fetch EVP Logo
+    let evpLogoBase64 = '';
+    try {
+        const evpResp = await axios.get(EVP_LOGO_URL, { responseType: 'arraybuffer', timeout: 10000 });
+        evpLogoBase64 = `data:image/png;base64,${Buffer.from(evpResp.data).toString('base64')}`;
+    } catch (e) {
+        console.error('EVP LOGO FETCH ERR:', e.message);
+    }
+
     const allDates = new Set();
     for (const dailyMap of processed.values()) {
         for (const date of dailyMap.keys()) allDates.add(date);
@@ -177,21 +187,25 @@ async function generatePrakiraanImages() {
                 padding: 15px 25px; 
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%); 
                 color: #f8fafc; 
-                display: flex; align-items: center; gap: 25px; 
+                display: flex; align-items: center; justify-content: space-between; 
             }
+            .header-left { display: flex; align-items: center; gap: 20px; }
             .header-logo { 
-                width: 85px; height: 85px; border-radius: 22px; background: #e6f4ff; 
+                width: 80px; height: 80px; border-radius: 20px; background: #e6f4ff; 
                 display: flex; align-items: center; justify-content: center; 
                 border: 2px solid rgba(191,219,254,0.9); box-shadow: 0 4px 10px rgba(30,64,175,0.25);
             }
             .header-text { display: flex; flex-direction: column; }
-            .header-text h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.6px; }
-            .header-text h2 { margin: 4px 0 0 0; font-size: 18px; color: #e0f2fe; font-weight: 700; }
+            .header-text h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; }
+            .header-text h2 { margin: 3px 0 0 0; font-size: 16px; color: #e0f2fe; font-weight: 700; }
             .period-box {
-                margin-top: 8px; display: inline-flex; align-items: center; gap: 10px; 
-                font-size: 16px; font-weight: 800; background: rgba(148, 163, 184, 0.25); 
-                color: #f8fafc; padding: 6px 14px; border-radius: 999px;
+                margin-top: 6px; display: inline-flex; align-items: center; gap: 10px; 
+                font-size: 14px; font-weight: 800; background: rgba(148, 163, 184, 0.25); 
+                color: #f8fafc; padding: 5px 12px; border-radius: 999px;
             }
+            .header-right { display: flex; align-items: center; }
+            .evp-logo { height: 75px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+
             .table-container { padding: 10px 20px 0 20px; flex: 1; overflow: hidden; }
             .table-inner { border: 1.5px solid #d1d5db; border-radius: 18px; background: #f9fafb; overflow: hidden; }
             table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; color: rgba(0,0,0,0.95); }
@@ -225,14 +239,19 @@ async function generatePrakiraanImages() {
         <body>
           <div class="outer-container">
             <div class="header">
-              <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="65"></div>
-              <div class="header-text">
-                <h1>BMKG - Stasiun Meteorologi Pangsuma</h1>
-                <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
-                <div class="period-box">
-                  <span>Berlaku</span>
-                  <span style="color: #bae6fd;">${dateLabel}</span>
+              <div class="header-left">
+                <div class="header-logo"><img src="data:image/png;base64,${bmkgLogo}" width="60"></div>
+                <div class="header-text">
+                    <h1>BMKG - Stasiun Meteorologi Pangsuma</h1>
+                    <h2>Prakiraan Cuaca Kapuas Hulu ${titleSuffix}</h2>
+                    <div class="period-box">
+                    <span>Berlaku</span>
+                    <span style="color: #bae6fd;">${dateLabel}</span>
+                    </div>
                 </div>
+              </div>
+              <div class="header-right">
+                ${evpLogoBase64 ? `<img src="${evpLogoBase64}" class="evp-logo">` : ''}
               </div>
             </div>
 
