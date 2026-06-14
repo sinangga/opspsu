@@ -407,7 +407,14 @@ bot.on('callback_query', async (q) => {
     } else if (data.startsWith('retry_')) {
         const item = schedules.find(x => x.id === Number(data.split('_')[1])); if (item && await sendMetar(item.message)) bot.sendMessage(cid, '✅ *RETRY SUCCESS*', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
     } else if (data.startsWith('delete_')) {
-        const id = Number(data.split('_')[1]); schedules = schedules.filter(x => x.id !== id); saveSchedules(); bot.sendMessage(cid, '🗑 *Jadwal Terhapus*', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
+        const id = Number(data.split('_')[1]); 
+        schedules = schedules.filter(x => x.id !== id); 
+        if (jobs[id]) {
+            jobs[id].cancel();
+            delete jobs[id];
+        }
+        saveSchedules(); 
+        bot.sendMessage(cid, '🗑 *Jadwal Terhapus*', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
     } else if (data === 'back_home') { delete sessions[cid]; bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*', { parse_mode: 'Markdown', ...mainMenu() }); }
     bot.answerCallbackQuery(q.id).catch(() => {});
 });
@@ -529,5 +536,12 @@ bot.on('message', async (msg) => {
 });
 
 bot.on('polling_error', (e) => console.log('POLLING ERROR:', e.message));
-loadHistoryLog(); loadSchedules(); loadUsers();
+loadHistoryLog(); 
+loadSchedules(); 
+console.log(`[INIT] Loading ${schedules.length} schedules...`);
+schedules.forEach(item => {
+    console.log(`[INIT] Registering schedule ID: ${item.id} (${item.hour}:${item.minute} UTC)`);
+    registerSchedule(item);
+});
+loadUsers();
 console.log('🏛️ DIGITALISASI BMKG RUNNING');
