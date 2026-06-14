@@ -50,13 +50,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Layanan & Lainnya",
     items: [
       { href: "/laporan-kerja", label: "Laporan Kerja", icon: FileText },
-      { href: "/permohonan-data", label: "Permohonan Data", icon: ClipboardList },
-      { href: "/tracking", label: "Lacak Permohonan", icon: Search },
-      { href: "/game", label: "Permainan", icon: Gamepad2 },
     ],
-  },
-  {
-    title: "Admin",
-    items: [{ href: "/admin", label: "Admin Dashboard", icon: Lock }],
   },
 ];
