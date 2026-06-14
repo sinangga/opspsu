@@ -451,7 +451,7 @@ bot.on('message', async (msg) => {
                 inline_keyboard: [[
                     { 
                         text: "🎥 Mulai Kamera AR", 
-                        web_app: { url: "https://opspsu-dashboard.vercel.app/ar-weather" } 
+                        web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } 
                     }
                 ]]
             }
