@@ -359,7 +359,7 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 BMKGsatu', '❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 BMKGsatu', '🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🔍 Cek Data Terbaru', '🏠 Back to Home']], resize_keyboard: true } }; }
@@ -443,6 +443,20 @@ bot.on('message', async (msg) => {
     if (text === '✈️ METAR') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
     if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
+
+    if (text === '🚀 AR Weather') {
+        return bot.sendMessage(cid, '🚀 *AR WEATHER PANGSUMA*\n\nBuka pandangan AR untuk melihat cuaca di sekitar kamu secara real-time.\n\n_Catatan: Membutuhkan izin kamera dan sensor gerak._', {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [[
+                    { 
+                        text: "🎥 Mulai Kamera AR", 
+                        web_app: { url: "https://opspsu-dashboard.vercel.app/ar-weather" } 
+                    }
+                ]]
+            }
+        });
+    }
 
     if (text === '☁️ Prakiraan') {
         const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
