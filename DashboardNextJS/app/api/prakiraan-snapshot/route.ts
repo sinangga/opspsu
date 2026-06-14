@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { getCachedPrakiraanSnapshot } from "@/lib/server/prakiraan-cache";
+import { fetchPrakiraanBatch } from "@/lib/bmkg";
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const record = await getCachedPrakiraanSnapshot();
-    return NextResponse.json(record, {
+    const data = await fetchPrakiraanBatch();
+    return NextResponse.json({ data }, {
       headers: {
         "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
         Pragma: "no-cache",
