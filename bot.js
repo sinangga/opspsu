@@ -373,12 +373,17 @@ function prakiraanMenu() {
         }
     };
 }
-function kecamatanMenu() {
-    const kbs = Object.keys(kecamatanMap).map(k => ({ text: k, callback_data: `kecamatan_${k}` }));
-    const kb = [];
-    for (let i = 0; i < kbs.length; i += 2) kb.push(kbs.slice(i, i + 2));
-    kb.push([{ text: '🔙 Back to PRAKIRAAN MENU', callback_data: 'back_prakiraan' }]);
-    return { reply_markup: { inline_keyboard: kb } };
+function arWeatherMenu() {
+    return {
+        reply_markup: {
+            keyboard: [
+                [{ text: "🎥 Buka Kamera AR", web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } }],
+                [{ text: "🗺️ Buka Peta Kecamatan", web_app: { url: "https://untuk-vercel.vercel.app/kecamatan-map" } }],
+                ['🏠 Back to Home']
+            ],
+            resize_keyboard: true
+        }
+    };
 }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
