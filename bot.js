@@ -520,19 +520,7 @@ bot.on('message', async (msg) => {
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
     if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
-    if (text === '🚀 AR Weather') {
-        return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: "🎥 Kamera AR", web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } },
-                        { text: "🗺️ Peta Kecamatan", web_app: { url: "https://untuk-vercel.vercel.app/kecamatan-map" } }
-                    ]
-                ]
-            }
-        });
-    }
+    if (text === '🚀 AR Weather') { return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', { parse_mode: 'Markdown', ...arWeatherMenu() }); }
 
     if (text === '☁️ Prakiraan') {
         const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
