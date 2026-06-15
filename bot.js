@@ -360,12 +360,24 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 Prakiraan Kecamatan', '🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function prakiraanMenu() {
+    return {
+        reply_markup: {
+            keyboard: [
+                ['☁️ Infografis Prakiraan'],
+                ['🗺️ Peta Kecamatan (Mini App)'],
+                ['🏠 Back to Home']
+            ],
+            resize_keyboard: true
+        }
+    };
+}
 function kecamatanMenu() {
     const kbs = Object.keys(kecamatanMap).map(k => ({ text: k, callback_data: `kecamatan_${k}` }));
     const kb = [];
     for (let i = 0; i < kbs.length; i += 2) kb.push(kbs.slice(i, i + 2));
-    kb.push([{ text: '🏠 Back to Home', callback_data: 'back_home' }]);
+    kb.push([{ text: '🔙 Back to PRAKIRAAN MENU', callback_data: 'back_prakiraan' }]);
     return { reply_markup: { inline_keyboard: kb } };
 }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
@@ -439,6 +451,8 @@ bot.on('callback_query', async (q) => {
         } catch(e) {
             bot.editMessageText(`❌ *Gagal mengambil data:* ${e.message}`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' });
         }
+    } else if (data === 'back_prakiraan') {
+        bot.editMessageText('☁️ *Prakiraan Menu*', { chat_id: cid, message_id: q.message.message_id, parse_mode: 'Markdown', ...prakiraanMenu() });
     } else if (data === 'back_home') { delete sessions[cid]; bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*', { parse_mode: 'Markdown', ...mainMenu() }); }
     bot.answerCallbackQuery(q.id).catch(() => {});
 });
@@ -471,6 +485,31 @@ bot.on('message', async (msg) => {
     if (text === '🔙 Back to GRAPH MENU') return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
     
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
+    if (text === '☁️ Prakiraan') { return bot.sendMessage(cid, '☁️ *Prakiraan Menu*', { parse_mode: 'Markdown', ...prakiraanMenu() }); }
+    if (text === '☁️ Infografis Prakiraan') {
+        const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
+        try {
+            const files = await generatePrakiraanImages();
+            for (const file of files) {
+                const caption = file.includes('_h0_') ? '☁️ *Prakiraan Cuaca Hari Ini*' : '☁️ *Prakiraan Cuaca Besok (H+1)*';
+                await bot.sendPhoto(cid, fs.readFileSync(file), { caption, parse_mode: 'Markdown' });
+                fs.unlinkSync(file);
+            }
+            bot.deleteMessage(cid, ldr.message_id).catch(() => {});
+        } catch (e) {
+            console.error('PRAKIRAAN ERR:', e.message);
+            bot.editMessageText(`❌ *GAGAL:* ${e.message}`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' });
+        }
+        return;
+    }
+    if (text === '🗺️ Peta Kecamatan (Mini App)') {
+        return bot.sendMessage(cid, '🗺️ *Peta Interaktif Kecamatan*\n\nKlik tombol di bawah untuk membuka peta:', {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [[ { text: "🗺️ Buka Peta Kecamatan", web_app: { url: "https://untuk-vercel.vercel.app/kecamatan-map" } } ]]
+            }
+        });
+    }
     if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
