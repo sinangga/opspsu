@@ -1,0 +1,140 @@
+{
+  "Bika": {
+    "adm4": "61.06.02.2001",
+    "lat": 0.8320842885,
+    "lon": 112.8732000982,
+    "kecamatan": "Bika"
+  },
+  "Putussibau Utara": {
+    "adm4": "61.06.01.1001",
+    "lat": 0.8722417644,
+    "lon": 112.9278869707,
+    "kecamatan": "Putussibau Utara"
+  },
+  "Putussibau Selatan": {
+    "adm4": "61.06.17.1001",
+    "lat": 0.843346568,
+    "lon": 112.9381666281,
+    "kecamatan": "Putussibau Selatan"
+  },
+  "Embaloh Hilir": {
+    "adm4": "61.06.03.2001",
+    "lat": 0.8325837768,
+    "lon": 112.5811818441,
+    "kecamatan": "Embaloh Hilir"
+  },
+  "Bunut Hilir": {
+    "adm4": "61.06.05.2001",
+    "lat": 0.7457763931,
+    "lon": 112.4675211286,
+    "kecamatan": "Bunut Hilir"
+  },
+  "Jongkong": {
+    "adm4": "61.06.07.2001",
+    "lat": 0.7556658309,
+    "lon": 112.2783330271,
+    "kecamatan": "Jongkong"
+  },
+  "Hulu Gurung": {
+    "adm4": "61.06.08.2001",
+    "lat": 0.3671245476,
+    "lon": 112.2997276874,
+    "kecamatan": "Hulu Gurung"
+  },
+  "Seberuang": {
+    "adm4": "61.06.11.2001",
+    "lat": 0.4360358398,
+    "lon": 111.9910546258,
+    "kecamatan": "Seberuang"
+  },
+  "Selimbau": {
+    "adm4": "61.06.09.2001",
+    "lat": 0.5943778737,
+    "lon": 112.1269196276,
+    "kecamatan": "Selimbau"
+  },
+  "Badau": {
+    "adm4": "61.06.14.2001",
+    "lat": 1.0450078415,
+    "lon": 111.88870669,
+    "kecamatan": "Badau"
+  },
+  "Batang Lupar": {
+    "adm4": "61.06.12.2001",
+    "lat": 1.1526885285,
+    "lon": 112.1839824529,
+    "kecamatan": "Batang Lupar"
+  },
+  "Bunut Hulu": {
+    "adm4": "61.06.06.2001",
+    "lat": 0.5225886066,
+    "lon": 112.6890879524,
+    "kecamatan": "Bunut Hulu"
+  },
+  "Puring Kencana": {
+    "adm4": "61.06.23.2001",
+    "lat": 0.9648537346,
+    "lon": 111.6039767263,
+    "kecamatan": "Puring Kencana"
+  },
+  "Embaloh Hulu": {
+    "adm4": "61.06.04.2001",
+    "lat": 1.1043629992,
+    "lon": 112.3806689804,
+    "kecamatan": "Embaloh Hulu"
+  },
+  "Kalis": {
+    "adm4": "61.06.18.2001",
+    "lat": 0.6164950107,
+    "lon": 113.0239281726,
+    "kecamatan": "Kalis"
+  },
+  "Silat Hilir": {
+    "adm4": "61.06.15.2001",
+    "lat": 0.3509798386,
+    "lon": 111.7652231436,
+    "kecamatan": "Silat Hilir"
+  },
+  "Mentebah": {
+    "adm4": "61.06.20.2001",
+    "lat": 0.5817951216,
+    "lon": 112.7581031563,
+    "kecamatan": "Mentebah"
+  },
+  "Suhaid": {
+    "adm4": "61.06.22.2001",
+    "lat": 0.547629085,
+    "lon": 112.109437535,
+    "kecamatan": "Suhaid"
+  },
+  "Empanang": {
+    "adm4": "61.06.13.2001",
+    "lat": 0.7738050895,
+    "lon": 111.8031602337,
+    "kecamatan": "Empanang"
+  },
+  "Semitau": {
+    "adm4": "61.06.10.2001",
+    "lat": 0.5548010022,
+    "lon": 111.9741002241,
+    "kecamatan": "Semitau"
+  },
+  "Pengkadan": {
+    "adm4": "61.06.21.2001",
+    "lat": 0.4984756665,
+    "lon": 112.2854732754,
+    "kecamatan": "Pengkadan"
+  },
+  "Silat Hulu": {
+    "adm4": "61.06.16.2001",
+    "lat": 0.2880016012,
+    "lon": 112.0028525854,
+    "kecamatan": "Silat Hulu"
+  },
+  "Boyan Tanjung": {
+    "adm4": "61.06.19.2001",
+    "lat": 0.5773344677,
+    "lon": 112.4997618984,
+    "kecamatan": "Boyan Tanjung"
+  }
+}

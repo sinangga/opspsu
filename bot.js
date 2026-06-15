@@ -7,6 +7,7 @@ const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
 const { generatePrakiraanImages } = require('./prakiraan');
+const kecamatanMap = require('./DashboardNextJS/kecamatan_map.json');
 
 // ================= CONFIG =================
 const TOKEN = process.env.BOT_TOKEN;
@@ -359,7 +360,14 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 BMKGsatu', '🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['✈️ METAR', '📊 Graph'], ['🌐 Prakiraan Kecamatan', '🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function kecamatanMenu() {
+    const kbs = Object.keys(kecamatanMap).map(k => ({ text: k, callback_data: `kecamatan_${k}` }));
+    const kb = [];
+    for (let i = 0; i < kbs.length; i += 2) kb.push(kbs.slice(i, i + 2));
+    kb.push([{ text: '🏠 Back to Home', callback_data: 'back_home' }]);
+    return { reply_markup: { inline_keyboard: kb } };
+}
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🔍 Cek Data Terbaru', '🏠 Back to Home']], resize_keyboard: true } }; }
@@ -415,6 +423,22 @@ bot.on('callback_query', async (q) => {
         }
         saveSchedules(); 
         bot.sendMessage(cid, '🗑 *Jadwal Terhapus*', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
+    } else if (data.startsWith('kecamatan_')) {
+        const kName = data.split('_')[1];
+        const info = kecamatanMap[kName];
+        if (!info) return bot.sendMessage(cid, '❌ *Kecamatan tidak ditemukan.*');
+        
+        // Fetch forecast based on adm4
+        // Since we don't have a specific single-kecamatan fetcher, we can use the batch fetch
+        const ldr = await bot.sendMessage(cid, `⏳ *Mengambil prakiraan untuk ${kName}...*`, { parse_mode: 'Markdown' });
+        try {
+            const data = await fetch('https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=' + info.adm4, { cache: 'no-store' }).then(r => r.json());
+            const entry = data.data[0];
+            const cuaca = entry.cuaca[0][0]; // Take first time slot
+            bot.editMessageText(`☁️ *Prakiraan Cuaca ${kName}*\n\n📍 *Kecamatan:* ${kName}\n🌡 *Suhu:* ${cuaca.t}°C\n💧 *Kelembapan:* ${cuaca.hu}%\n💨 *Angin:* ${cuaca.ws} KT (${cuaca.wd})\n⛈ *Cuaca:* ${cuaca.weather_desc}`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' });
+        } catch(e) {
+            bot.editMessageText(`❌ *Gagal mengambil data:* ${e.message}`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' });
+        }
     } else if (data === 'back_home') { delete sessions[cid]; bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*', { parse_mode: 'Markdown', ...mainMenu() }); }
     bot.answerCallbackQuery(q.id).catch(() => {});
 });
@@ -447,20 +471,21 @@ bot.on('message', async (msg) => {
     if (text === '🔙 Back to GRAPH MENU') return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
     
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
+    if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
     if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '🚀 AR Weather') {
-        return bot.sendMessage(cid, '🚀 *AR WEATHER PANGSUMA*\n\nBuka pandangan AR untuk melihat cuaca di sekitar kamu secara real-time.\n\n_Catatan: Membutuhkan izin kamera dan sensor gerak._', {
+        return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', {
             parse_mode: 'Markdown',
             reply_markup: {
-                inline_keyboard: [[
-                    { 
-                        text: "🎥 Mulai Kamera AR", 
-                        web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } 
-                    }
-                ]]
+                inline_keyboard: [
+                    [
+                        { text: "🎥 Kamera AR", web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } },
+                        { text: "🗺️ Peta Kecamatan", web_app: { url: "https://untuk-vercel.vercel.app/kecamatan-map" } }
+                    ]
+                ]
             }
         });
     }
