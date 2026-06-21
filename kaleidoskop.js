@@ -153,6 +153,10 @@ function windSector(degrees) {
     return labels[Math.round((degrees % 360) / 45) % 8];
 }
 
+function windSectorIndex(degrees) {
+    return Math.round((((degrees % 360) + 360) % 360) / 45) % 8;
+}
+
 function formatDay(dateText) {
     const day = Number(dateText.slice(8, 10));
     return `${day} ${MONTHS[Number(dateText.slice(5, 7)) - 1]}`;
@@ -162,6 +166,7 @@ function summarizeMonthly(rows, year, month) {
     if (!rows.length) throw new Error('Data pada bulan tersebut tidak tersedia');
     const temps = [], humidities = [], winds = [];
     const sectors = new Map(), weather = new Map(), daily = new Map();
+    const windRoseBins = Array.from({ length: 8 }, () => [0, 0, 0, 0]);
     let tempMax = null, tempMin = null, windMax = null;
     let lastTimestamp = null;
 
@@ -193,6 +198,8 @@ function summarizeMonthly(rows, year, month) {
             if (direction !== null && speed > 0) {
                 const sector = windSector(direction);
                 sectors.set(sector, (sectors.get(sector) || 0) + 1);
+                const speedBin = speed < 2 ? 0 : speed < 5 ? 1 : speed < 8 ? 2 : 3;
+                windRoseBins[windSectorIndex(direction)][speedBin]++;
             }
         }
 
@@ -256,7 +263,14 @@ function summarizeMonthly(rows, year, month) {
         temperature: { average: avg(temps), maximum: tempMax, minimum: tempMin },
         humidity: { average: avg(humidities) },
         rainfall: { total: totalRain, rainyDays: rainDays.length, traceDays: traceDays.length, maximum: maxRain },
-        wind: { dominant: dominantWind, maximum: windMax },
+        wind: {
+            dominant: dominantWind,
+            maximum: windMax,
+            rose: {
+                bins: windRoseBins,
+                total: windRoseBins.flat().reduce((sum, value) => sum + value, 0)
+            }
+        },
         dominantWeather,
         highlights: highlights.slice(0, 3),
         chartDays
@@ -298,6 +312,71 @@ function temperatureChart(days) {
         <line x1="0" y1="125" x2="${width}" y2="125" stroke="#cbd5e1"/>
         ${segments.map(segment => `<polyline points="${segment.join(' ')}" fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
         ${points.filter(Boolean).map(point => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3.5" fill="#ea580c"/>`).join('')}
+    </svg>`;
+}
+
+function polarPoint(cx, cy, radius, degrees) {
+    const radians = (degrees - 90) * Math.PI / 180;
+    return { x: cx + radius * Math.cos(radians), y: cy + radius * Math.sin(radians) };
+}
+
+function sectorPath(cx, cy, innerRadius, outerRadius, startDegrees, endDegrees) {
+    const outerStart = polarPoint(cx, cy, outerRadius, startDegrees);
+    const outerEnd = polarPoint(cx, cy, outerRadius, endDegrees);
+    const innerEnd = polarPoint(cx, cy, innerRadius, endDegrees);
+    const innerStart = polarPoint(cx, cy, innerRadius, startDegrees);
+    return [
+        `M ${outerStart.x.toFixed(2)} ${outerStart.y.toFixed(2)}`,
+        `A ${outerRadius.toFixed(2)} ${outerRadius.toFixed(2)} 0 0 1 ${outerEnd.x.toFixed(2)} ${outerEnd.y.toFixed(2)}`,
+        `L ${innerEnd.x.toFixed(2)} ${innerEnd.y.toFixed(2)}`,
+        innerRadius > 0
+            ? `A ${innerRadius.toFixed(2)} ${innerRadius.toFixed(2)} 0 0 0 ${innerStart.x.toFixed(2)} ${innerStart.y.toFixed(2)}`
+            : `L ${cx} ${cy}`,
+        'Z'
+    ].join(' ');
+}
+
+function windRoseChart(rose) {
+    const width = 470, height = 178, cx = 92, cy = 91, maxRadius = 68;
+    const colors = ['#bae6fd', '#38bdf8', '#0284c7', '#075985'];
+    const labels = ['< 2 kt', '2–4 kt', '5–7 kt', '≥ 8 kt'];
+    const compass = ['U', 'TL', 'T', 'TG', 'S', 'BD', 'B', 'BL'];
+    const totals = rose.bins.map(bins => bins.reduce((sum, value) => sum + value, 0));
+    const maxPercent = Math.max(1, ...totals.map(total => total / Math.max(1, rose.total) * 100));
+    const roundedScale = Math.max(5, Math.ceil(maxPercent / 5) * 5);
+    const rings = [0.25, 0.5, 0.75, 1].map(fraction => {
+        const radius = maxRadius * fraction;
+        const value = roundedScale * fraction;
+        return `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+            <text x="${cx + 4}" y="${cy - radius + 12}" font-size="11" fill="#94a3b8">${value.toFixed(value % 1 ? 1 : 0)}%</text>`;
+    }).join('');
+    const axes = Array.from({ length: 8 }, (_, index) => {
+        const point = polarPoint(cx, cy, maxRadius, index * 45);
+        const labelPoint = polarPoint(cx, cy, maxRadius + 13, index * 45);
+        return `<line x1="${cx}" y1="${cy}" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" stroke="#e2e8f0"/>
+            <text x="${labelPoint.x.toFixed(1)}" y="${(labelPoint.y + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">${compass[index]}</text>`;
+    }).join('');
+    const bars = rose.bins.map((bins, sectorIndex) => {
+        let cumulative = 0;
+        return bins.map((count, binIndex) => {
+            if (!count) return '';
+            const inner = cumulative / Math.max(1, rose.total) * 100 / roundedScale * maxRadius;
+            cumulative += count;
+            const outer = cumulative / Math.max(1, rose.total) * 100 / roundedScale * maxRadius;
+            const centerAngle = sectorIndex * 45;
+            return `<path d="${sectorPath(cx, cy, inner, outer, centerAngle - 18, centerAngle + 18)}" fill="${colors[binIndex]}" stroke="white" stroke-width="1.5"/>`;
+        }).join('');
+    }).join('');
+    const legend = labels.map((label, index) => `
+        <g transform="translate(205 ${43 + index * 28})">
+            <rect width="20" height="14" rx="3" fill="${colors[index]}"/>
+            <text x="29" y="12" font-size="14" fill="#334155">${label}</text>
+        </g>`).join('');
+    return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="178">${rings}${axes}${bars}
+        <text x="198" y="22" font-size="14" font-weight="700" fill="#475569">Kelas Kecepatan</text>${legend}
+        <text x="355" y="61" font-size="12" fill="#64748b">Frekuensi</text>
+        <text x="355" y="90" font-size="27" font-weight="800" fill="#075985">${rose.total}</text>
+        <text x="355" y="110" font-size="12" fill="#64748b">data valid</text>
     </svg>`;
 }
 
@@ -348,7 +427,7 @@ async function renderInfographic(summary) {
             </section>
             <section class="charts">
                 <div class="card chart"><h2>Curah Hujan Harian</h2><small>milimeter per hari</small>${rainChart(summary.chartDays)}</div>
-                <div class="card chart"><h2>Suhu Rata-rata Harian</h2><small>derajat Celsius</small>${temperatureChart(summary.chartDays)}</div>
+                <div class="card chart"><h2>Windrose Bulanan</h2><small>frekuensi arah dan kelas kecepatan angin</small>${windRoseChart(summary.wind.rose)}</div>
             </section>
             <section class="card highlights"><h2>Catatan Cuaca Bulan Ini</h2><ul>${summary.highlights.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>
         </main>
