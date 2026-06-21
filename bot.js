@@ -362,7 +362,7 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph'], ['🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🌐 BMKGsatu'], ['🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
 function prakiraanMenu() {
     return {
         reply_markup: {
@@ -479,7 +479,7 @@ bot.on('message', async (msg) => {
     // Auth Check
     const isAuth = isAuthenticated(cid);
     const session = sessions[cid];
-    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph') && !isAuth) { 
+    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🌐 BMKGsatu' || text === '/bmkgsatu') && !isAuth) { 
         sessions[cid] = { mode: 'auth_email', target: text }; 
         return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' }); 
     }
@@ -499,6 +499,8 @@ bot.on('message', async (msg) => {
             let welcomeMsg = '✅ *Verifikasi Berhasil!* Akses dibuka.\n';
             if (target === '📊 Graph' || target === '/graph') {
                 welcomeMsg += 'Silakan ketik /graph atau pilih menu 📊 Graph kembali.';
+            } else if (target === '🌐 BMKGsatu' || target === '/bmkgsatu') {
+                welcomeMsg += 'Silakan ketik /bmkgsatu atau pilih menu 🌐 BMKGsatu kembali.';
             } else {
                 welcomeMsg += 'Silakan ketik /metar untuk masuk ke menu METAR.';
             }
@@ -516,6 +518,13 @@ bot.on('message', async (msg) => {
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
+    }
+    if (text === '🔙 Back to BMKGSATU MENU') {
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
+        return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
     }
     
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
@@ -547,7 +556,7 @@ bot.on('message', async (msg) => {
     if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR' || text === '/metar') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph' || text === '/graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
-    if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
+    if (text === '🌐 BMKGsatu' || text === '/bmkgsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '🚀 AR Weather') { return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', { parse_mode: 'Markdown', ...arWeatherMenu() }); }
 
@@ -571,6 +580,10 @@ bot.on('message', async (msg) => {
     if (text === '📊 Realtime Data') { const rt = await fetchRealtimeData(); return bot.sendMessage(cid, rt, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔍 Cek Data Terbaru') {
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
         const ldr = await bot.sendMessage(cid, '⏳ *Menghubungi BMKGsatu...*', { parse_mode: 'Markdown' });
         setTimeout(() => {
             bot.editMessageText(`🌐 *BMKGsatu - STATUS*\n\n✅ *Status:* Terhubung\n🔑 *User:* ${BMKGSATU_USER}\n\n_Fitur penarikan data otomatis dari dashboard sedang disiapkan._`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') });
