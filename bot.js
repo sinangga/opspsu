@@ -424,7 +424,7 @@ bot.on('callback_query', async (q) => {
         const ldr = await bot.sendMessage(cid, `⏳ *Memproses data untuk ${dStr}...*`, { parse_mode: 'Markdown' });
         if (mode === 'ikhtisar_date') {
             const res = await generateIkhtisar(dStr, cid, ldr.message_id);
-            if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); if (res.rawData) { await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${dStr}.csv`, contentType: 'text/csv' }); } bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
+            if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
         } else {
             if (!isAuthenticated(cid)) {
                 bot.deleteMessage(cid, ldr.message_id).catch(() => {});
@@ -619,7 +619,6 @@ bot.on('message', async (msg) => {
             const res = await generateIkhtisar(d, cid, ldr.message_id); 
             if (res.report) { 
                 await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); 
-                if (res.rawData) await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${d}.csv`, contentType: 'text/csv' }); 
                 bot.sendMessage(cid, '✅ *Proses Ikhtisar Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); 
             }
             delete sessions[cid];
