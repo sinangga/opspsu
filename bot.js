@@ -426,6 +426,12 @@ bot.on('callback_query', async (q) => {
             const res = await generateIkhtisar(dStr, cid, ldr.message_id);
             if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); if (res.rawData) { await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${dStr}.csv`, contentType: 'text/csv' }); } bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
         } else {
+            if (!isAuthenticated(cid)) {
+                bot.deleteMessage(cid, ldr.message_id).catch(() => {});
+                delete sessions[cid];
+                sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
+                return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+            }
             const res = await generateGraphData((sessions[cid]||{}).chartType, dStr, cid, ldr.message_id);
             if (res.photoBuffer) { await bot.sendPhoto(cid, res.photoBuffer, { caption: res.caption, parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Grafik Berhasil Dibuat.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); }
             else bot.sendMessage(cid, res.report || 'Error', { parse_mode: 'Markdown', ...backSubMenu('Graph') });
@@ -473,7 +479,10 @@ bot.on('message', async (msg) => {
     // Auth Check
     const isAuth = isAuthenticated(cid);
     const session = sessions[cid];
-    if ((text === '✈️ METAR' || text === '/metar') && !isAuth) { sessions[cid] = { mode: 'auth_email' }; return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' }); }
+    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph') && !isAuth) { 
+        sessions[cid] = { mode: 'auth_email', target: text }; 
+        return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' }); 
+    }
     if (session && session.mode === 'auth_email') {
         if (!text.endsWith('@bmkg.go.id')) return bot.sendMessage(cid, '❌ *Format Salah:* Gunakan email resmi @bmkg.go.id', { parse_mode: 'Markdown' });
         const otp = Math.floor(100000 + Math.random() * 900000); session.mode = 'auth_otp'; session.email = text; session.otp = otp;
@@ -482,14 +491,32 @@ bot.on('message', async (msg) => {
         else { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Gagal mengirim email.* Hubungi admin.', { parse_mode: 'Markdown', ...mainMenu() }); }
     }
     if (session && session.mode === 'auth_otp') {
-        if (text == session.otp) { verifiedUsers[cid] = { email: session.email, lastVerified: Date.now(), lastActive: Date.now() }; saveUsers(); delete sessions[cid]; return bot.sendMessage(cid, '✅ *Verifikasi Berhasil!* Akses METAR dibuka.\nSilakan ketik /metar untuk masuk ke menu METAR.', { parse_mode: 'Markdown', ...mainMenu() }); }
+        if (text == session.otp) { 
+            const target = session.target || '✈️ METAR';
+            verifiedUsers[cid] = { email: session.email, lastVerified: Date.now(), lastActive: Date.now() }; 
+            saveUsers(); 
+            delete sessions[cid]; 
+            let welcomeMsg = '✅ *Verifikasi Berhasil!* Akses dibuka.\n';
+            if (target === '📊 Graph' || target === '/graph') {
+                welcomeMsg += 'Silakan ketik /graph atau pilih menu 📊 Graph kembali.';
+            } else {
+                welcomeMsg += 'Silakan ketik /metar untuk masuk ke menu METAR.';
+            }
+            return bot.sendMessage(cid, welcomeMsg, { parse_mode: 'Markdown', ...mainMenu() }); 
+        }
         else return bot.sendMessage(cid, '❌ *OTP Salah.* Silakan coba lagi:', { parse_mode: 'Markdown' });
     }
 
     // Navigation
     if (text === '✈️ METAR MENU' || text === '🔙 Back to METAR MENU') return bot.sendMessage(cid, '✈️ *METAR MENU*', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📈 IKHTISAR MENU' || text === '🔙 Back to IKHTISAR MENU') return bot.sendMessage(cid, '📈 *IKHTISAR MENU*', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
-    if (text === '🔙 Back to GRAPH MENU') return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
+    if (text === '🔙 Back to GRAPH MENU') {
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
+        return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
+    }
     
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
     if (text === '☁️ Prakiraan') { return bot.sendMessage(cid, '☁️ *Prakiraan Menu*', { parse_mode: 'Markdown', ...prakiraanMenu() }); }
@@ -519,7 +546,7 @@ bot.on('message', async (msg) => {
     }
     if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR' || text === '/metar') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
-    if (text === '📊 Graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
+    if (text === '📊 Graph' || text === '/graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
     if (text === '🌐 BMKGsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '🚀 AR Weather') { return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', { parse_mode: 'Markdown', ...arWeatherMenu() }); }
@@ -559,7 +586,14 @@ bot.on('message', async (msg) => {
     if (text === '📜 History') { if (history.length === 0) return bot.sendMessage(cid, 'ℹ️ Riwayat pengiriman kosong.', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); let hT = '📜 *RIWAYAT PENGIRIMAN (5 TERAKHIR)*\n'; history.slice(-5).reverse().forEach(e => hT += `\n📅 ${new Date(e.timestamp).toLocaleString()}\n📝 \`${e.message}\`\n👤 By: ${e.sender}\n---`); return bot.sendMessage(cid, hT, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🧹 Clear Chat') { const msgs = messageHistory[cid] || []; msgs.forEach(m => bot.deleteMessage(cid, m).catch(()=>{})); messageHistory[cid] = []; return bot.sendMessage(cid, '🧹 *Chat Dibersihkan*', { parse_mode: 'Markdown', ...mainMenu() }); }
     
-    if (['💨 Windrose','🌡 T-Td-RH','🌧 Rainfall'].includes(text)) { sessions[cid] = { mode: 'graph_date', chartType: text }; return bot.sendMessage(cid, `📊 *${text}*\nPilih tanggal grafik:`, { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
+    if (['💨 Windrose','🌡 T-Td-RH','🌧 Rainfall'].includes(text)) { 
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
+        sessions[cid] = { mode: 'graph_date', chartType: text }; 
+        return bot.sendMessage(cid, `📊 *${text}*\nPilih tanggal grafik:`, { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); 
+    }
 
     // Session Processing
     if (!session) return;
@@ -579,16 +613,31 @@ bot.on('message', async (msg) => {
     else if (session.mode === 'smart_clouds') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: text, chatId: cid, type: 'SMART', createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'message') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, message: text, chatId: cid, createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *MANUAL SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if ((session.mode === 'ikhtisar_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
-        const d = text.match(/\((.*?)\)/)[1], ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
-        if (session.mode === 'ikhtisar_date') { const res = await generateIkhtisar(d, cid, ldr.message_id); if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); if (res.rawData) await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${d}.csv`, contentType: 'text/csv' }); bot.sendMessage(cid, '✅ *Proses Ikhtisar Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); } }
+        const d = text.match(/\((.*?)\)/)[1];
+        if (session.mode === 'ikhtisar_date') {
+            const ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
+            const res = await generateIkhtisar(d, cid, ldr.message_id); 
+            if (res.report) { 
+                await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); 
+                if (res.rawData) await bot.sendDocument(cid, Buffer.from(res.rawData, 'utf8'), {}, { filename: `data_${d}.csv`, contentType: 'text/csv' }); 
+                bot.sendMessage(cid, '✅ *Proses Ikhtisar Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); 
+            }
+            delete sessions[cid];
+        }
         else { 
+            if (!isAuthenticated(cid)) {
+                delete sessions[cid];
+                sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
+                return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+            }
+            const ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
             const res = await generateGraphData(session.chartType, d, cid, ldr.message_id); 
             if (res.photoBuffer) { 
                 await bot.sendPhoto(cid, res.photoBuffer, { caption: res.caption, parse_mode: 'Markdown' }); 
                 bot.sendMessage(cid, '✅ *Grafik Siap.*', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); 
             } else bot.sendMessage(cid, res.report || 'Error', { parse_mode: 'Markdown', ...backSubMenu('Graph') }); 
+            delete sessions[cid];
         }
-        delete sessions[cid];
     } else if (text === '📅 Open Calendar') { bot.sendMessage(cid, '📅 *Pilih Tanggal:*', { parse_mode: 'Markdown', reply_markup: createCalendarKeyboard(new Date().getFullYear(), new Date().getMonth()) }); }
     if (text === '❌ Cancel') { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Operasi Dibatalkan.*', { parse_mode: 'Markdown', ...mainMenu() }); }
     if (text === '❌ Close') { delete sessions[cid]; return bot.sendMessage(cid, '🔒 *Budi Closed.* Sampai jumpa!', { reply_markup: { remove_keyboard: true } }); }
