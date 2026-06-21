@@ -20,8 +20,38 @@ const REALTIME_USER = 'admin';
 const REALTIME_PASS = 'admin';
 
 const BMKGSATU_URL = 'https://bmkgsatu.bmkg.go.id';
-const BMKGSATU_USER = '96565';
-const BMKGSATU_PASS = 'opr96565';
+const BMKGSATU_USER = process.env.BMKGSATU_USER;
+const BMKGSATU_PASS = process.env.BMKGSATU_PASS;
+const BMKGSATU_STATION_ID = 51;
+const BMKGSATU_STATION_NAME = 'Stasiun Meteorologi Pangsuma';
+const BMKGSATU_SINOPTIK_PARAMETERS = [
+    'wind_indicator_iw', 'wind_dir_deg_dd', 'wind_speed_ff', 'visibility_vv',
+    'weather_indicator_ix', 'present_weather_ww', 'past_weather_w1', 'past_weather_w2',
+    'pressure_temp_c', 'pressure_reading_mb', 'pressure_qfe_mb_derived',
+    'pressure_qff_mb_derived', 'pressure_3h_diff_mb_ppp', 'pressure_24h_diff_mb_p24',
+    'temp_drybulb_c_tttttt', 'temp_dewpoint_c_tdtdtd', 'temp_wetbulb_c',
+    'temp_max_c_txtxtx', 'temp_min_c_tntntn', 'relative_humidity_pc',
+    'rainfall_last_mm', 'rainfall_24h_rrrr', 'rainfall_6h_rrr', 'rainfall_indicator_ir',
+    'cloud_low_type_cl', 'cloud_low_cover_oktas', 'cloud_low_type_1', 'cloud_low_type_2',
+    'cloud_low_type_3', 'cloud_low_cover_1', 'cloud_low_cover_2', 'cloud_low_cover_3',
+    'cloud_low_base_1', 'cloud_low_base_2', 'cloud_low_base_3', 'cloud_low_peak_1',
+    'cloud_low_peak_2', 'cloud_low_dir_1', 'cloud_low_dir_2', 'cloud_low_dir_3',
+    'cloud_elevation_angle_ec_1', 'cloud_elevation_angle_ec_2',
+    'cloud_low_dir_true_da_1', 'cloud_low_dir_true_da_2',
+    'cloud_layer_1_type_c', 'cloud_layer_2_type_c', 'cloud_layer_1_height_m_hshs',
+    'cloud_layer_2_height_m_hshs', 'cloud_layer_1_amt_oktas_ns',
+    'cloud_layer_2_amt_oktas_ns', 'cloud_layer_3_type_c', 'cloud_layer_3_height_m_hshs',
+    'cloud_layer_3_amt_oktas_ns', 'cloud_layer_4_type_c', 'cloud_layer_4_height_m_hshs',
+    'cloud_layer_4_amt_oktas_ns', 'cloud_med_type_cm', 'cloud_med_cover_oktas',
+    'cloud_med_type_1', 'cloud_med_type_2', 'cloud_med_cover_1', 'cloud_med_cover_2',
+    'cloud_med_base_1', 'cloud_med_base_2', 'cloud_med_dir_1', 'cloud_med_dir_2',
+    'cloud_high_type_ch', 'cloud_high_cover_oktas', 'cloud_high_type_1',
+    'cloud_high_type_2', 'cloud_high_cover_1', 'cloud_high_cover_2',
+    'cloud_high_base_1', 'cloud_high_base_2', 'cloud_high_dir_1', 'cloud_high_dir_2',
+    'cloud_cover_oktas_m', 'cloud_vertical_vis', 'evaporation_24hours_mm_eee',
+    'evaporation_eq_indicator_ie', 'solar_rad_24h_jcm2_f24', 'sunshine_h_sss',
+    'land_cond', 'land_note', 'encoded_synop', 'edited_encoded_synop'
+];
 
 const ALLOWED_USERNAMES = ['neptruesun'];
 
@@ -121,12 +151,91 @@ async function verifyConnection() {
     catch (err) { return !!err.response; }
 }
 
-async function fetchBmkgsatuData() {
+function csvCell(value) {
+    if (value === null || value === undefined) return '';
+    const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+async function fetchBmkgsatuData(dateStr) {
     try {
-        // Placeholder for BMKGsatu data fetching logic
-        // Note: Exact API endpoints for bmkgsatu.bmkg.go.id need verification
-        return { success: true, data: `📍 *BMKGsatu Dashboard*\n👤 *User:* ${BMKGSATU_USER}\n🔑 *Status:* Verified\n\n_Fitur penarikan data otomatis sedang disiapkan. Silakan hubungi admin untuk konfigurasi endpoint API spesifik._` };
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            throw new Error('Format tanggal tidak valid');
+        }
+        if (!BMKGSATU_USER || !BMKGSATU_PASS) {
+            throw new Error('Kredensial BMKG Satu belum dikonfigurasi');
+        }
+
+        const login = await axios.post(
+            `${BMKGSATU_URL}/api/v21/user/session/login`,
+            { username: BMKGSATU_USER, password: BMKGSATU_PASS },
+            { timeout: 15000 }
+        );
+        const token = login.data?.data?.token;
+        if (!token) throw new Error('Token login BMKG Satu tidak diterima');
+
+        const payload = {
+            data_type: 'sinoptik',
+            parameter_names: BMKGSATU_SINOPTIK_PARAMETERS,
+            station_ids: [BMKGSATU_STATION_ID],
+            date_from: `${dateStr}T00:00:00Z`,
+            date_to: `${dateStr}T23:59:59Z`,
+            order_timestamp_code: 0
+        };
+        const response = await axios.post(
+            `${BMKGSATU_URL}/api/v21/export/observation/by-station/preview`,
+            payload,
+            {
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 60000
+            }
+        );
+        const headers = response.data?.data?.headers || [];
+        const rows = response.data?.data?.rows || [];
+        if (!headers.length || !rows.length) {
+            return { success: false, message: `Data Sinoptik ${dateStr} belum tersedia.` };
+        }
+
+        const csv = '\uFEFF' + [
+            headers.map(csvCell).join(','),
+            ...rows.map(row => row.map(csvCell).join(','))
+        ].join('\r\n');
+        return {
+            success: true,
+            count: rows.length,
+            filename: `sinoptik_pangsuma_${dateStr}.csv`,
+            buffer: Buffer.from(csv, 'utf8')
+        };
     } catch (e) { return { success: false, message: e.message }; }
+}
+
+async function sendBmkgsatuCsv(chatId, dateStr, loadingMessageId) {
+    const result = await fetchBmkgsatuData(dateStr);
+    if (loadingMessageId) {
+        await bot.deleteMessage(chatId, loadingMessageId).catch(() => {});
+    }
+    if (!result.success) {
+        return bot.sendMessage(
+            chatId,
+            `❌ *Gagal mengambil data BMKG Satu*\n\n${result.message}`,
+            { parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+        );
+    }
+
+    await bot.sendDocument(
+        chatId,
+        result.buffer,
+        {
+            caption: `✅ *Data Sinoptik Pangsuma*\n📅 Tanggal: *${dateStr}*\n📊 Jumlah observasi: *${result.count}*`,
+            parse_mode: 'Markdown'
+        },
+        { filename: result.filename, contentType: 'text/csv' }
+    );
+    return bot.sendMessage(
+        chatId,
+        '✅ Data berhasil diambil dari BMKG Satu.',
+        { parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+    );
 }
 
 async function getLatestSensorData() {
@@ -389,7 +498,7 @@ function arWeatherMenu() {
 }
 function graphMenu() { return { reply_markup: { keyboard: [['💨 Windrose', '🌡 T-Td-RH'], ['🌧 Rainfall'], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data', '📤 Send Now'], ['⏰ Manual Schedule', '✨ Smart Schedule'], ['📋 Active Schedule', '📜 History'], ['🔌 Check Connection', '🧹 Clear Chat'], ['🏠 Back to Home']], resize_keyboard: true } }; }
-function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🔍 Cek Data Terbaru', '🏠 Back to Home']], resize_keyboard: true } }; }
+function bmkgsatuMenu() { return { reply_markup: { keyboard: [['📥 Data Sinoptik Pangsuma'], ['🔍 Cek Koneksi', '🏠 Back to Home']], resize_keyboard: true } }; }
 function ikhtisarDateMenu() { 
     const t = new Date().toISOString().split('T')[0], y = new Date(Date.now()-86400000).toISOString().split('T')[0];
     return { reply_markup: { keyboard: [[`Hari Ini (${t})`], [`Kemarin (${y})`], ['📅 Open Calendar'], ['🏠 Back to Home']], resize_keyboard: true } };
@@ -422,7 +531,15 @@ bot.on('callback_query', async (q) => {
         const dStr = data.substring(8), mode = (sessions[cid] || {}).mode || 'ikhtisar_date';
         bot.answerCallbackQuery(q.id); bot.deleteMessage(cid, q.message.message_id);
         const ldr = await bot.sendMessage(cid, `⏳ *Memproses data untuk ${dStr}...*`, { parse_mode: 'Markdown' });
-        if (mode === 'ikhtisar_date') {
+        if (mode === 'bmkgsatu_date') {
+            if (!isAuthenticated(cid)) {
+                await bot.deleteMessage(cid, ldr.message_id).catch(() => {});
+                delete sessions[cid];
+                sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+                return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+            }
+            await sendBmkgsatuCsv(cid, dStr, ldr.message_id);
+        } else if (mode === 'ikhtisar_date') {
             const res = await generateIkhtisar(dStr, cid, ldr.message_id);
             if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
         } else {
@@ -556,7 +673,7 @@ bot.on('message', async (msg) => {
     if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR' || text === '/metar') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph' || text === '/graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
-    if (text === '🌐 BMKGsatu' || text === '/bmkgsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nFitur monitoring data BMKGsatu.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
+    if (text === '🌐 BMKGsatu' || text === '/bmkgsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nEkspor data Sinoptik Stasiun Meteorologi Pangsuma.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '🚀 AR Weather') { return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', { parse_mode: 'Markdown', ...arWeatherMenu() }); }
 
@@ -579,15 +696,39 @@ bot.on('message', async (msg) => {
 
     if (text === '📊 Realtime Data') { const rt = await fetchRealtimeData(); return bot.sendMessage(cid, rt, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
-    if (text === '🔍 Cek Data Terbaru') {
+    if (text === '📥 Data Sinoptik Pangsuma') {
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
+        sessions[cid] = { mode: 'bmkgsatu_date' };
+        return bot.sendMessage(cid, `📥 *Data Sinoptik Pangsuma*\n\nKategori: Meteorologi\nForm: Sinoptik\nBalai: Region II\nStasiun: ${BMKGSATU_STATION_NAME}\n\nPilih tanggal data:`, { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
+    }
+    if (text === '🔍 Cek Koneksi') {
         if (!isAuth) {
             sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         const ldr = await bot.sendMessage(cid, '⏳ *Menghubungi BMKGsatu...*', { parse_mode: 'Markdown' });
-        setTimeout(() => {
-            bot.editMessageText(`🌐 *BMKGsatu - STATUS*\n\n✅ *Status:* Terhubung\n🔑 *User:* ${BMKGSATU_USER}\n\n_Fitur penarikan data otomatis dari dashboard sedang disiapkan._`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') });
-        }, 1500);
+        try {
+            const login = await axios.post(
+                `${BMKGSATU_URL}/api/v21/user/session/login`,
+                { username: BMKGSATU_USER, password: BMKGSATU_PASS },
+                { timeout: 15000 }
+            );
+            const connected = Boolean(login.data?.data?.token);
+            await bot.editMessageText(
+                connected
+                    ? `🌐 *BMKGsatu - STATUS*\n\n✅ *Status:* Terhubung\n📍 *Stasiun:* ${BMKGSATU_STATION_NAME}`
+                    : '❌ *BMKGsatu tidak mengembalikan token login.*',
+                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+            );
+        } catch (e) {
+            await bot.editMessageText(
+                `❌ *Koneksi BMKGsatu gagal*\n\n${e.message}`,
+                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+            );
+        }
         return;
     }
     
@@ -625,9 +766,19 @@ bot.on('message', async (msg) => {
     else if (session.mode === 'smart_weather') { session.weather = text === 'Blank (None)' ? ' ' : text; session.mode = 'smart_clouds'; bot.sendMessage(cid, '☁️ *Masukkan Kondisi Awan (Clouds):*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); }
     else if (session.mode === 'smart_clouds') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: text, chatId: cid, type: 'SMART', createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'message') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, message: text, chatId: cid, createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *MANUAL SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
-    else if ((session.mode === 'ikhtisar_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
+    else if ((session.mode === 'ikhtisar_date' || session.mode === 'graph_date' || session.mode === 'bmkgsatu_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
         const d = text.match(/\((.*?)\)/)[1];
-        if (session.mode === 'ikhtisar_date') {
+        if (session.mode === 'bmkgsatu_date') {
+            if (!isAuthenticated(cid)) {
+                delete sessions[cid];
+                sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+                return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+            }
+            const ldr = await bot.sendMessage(cid, `⏳ *Mengambil data Sinoptik ${d}...*`, { parse_mode: 'Markdown' });
+            await sendBmkgsatuCsv(cid, d, ldr.message_id);
+            delete sessions[cid];
+        }
+        else if (session.mode === 'ikhtisar_date') {
             const ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
             const res = await generateIkhtisar(d, cid, ldr.message_id); 
             if (res.report) { 
