@@ -314,9 +314,13 @@ async function renderInfographic(summary) {
     const html = `<!doctype html><html><head><meta charset="utf-8"><style>
         *{box-sizing:border-box} body{margin:0;width:1080px;height:1350px;font-family:Arial,sans-serif;background:#eaf4fb;color:#0f172a}
         .page{position:relative;width:1080px;height:1350px;background:linear-gradient(180deg,#f8fcff,#e9f5ff);overflow:hidden}
-        header{height:205px;padding:28px 48px;color:white;background:linear-gradient(90deg,#38bdf8 0%,#0ea5e9 30%,#075985 68%,#0b2d4d 100%);display:flex;align-items:center;gap:28px}
-        .brand-logo{width:112px;height:126px;object-fit:contain;object-position:center;filter:drop-shadow(0 5px 9px rgba(0,0,0,.25))}
-        h1{font-size:48px;margin:0 0 8px;letter-spacing:1px}.subtitle{font-size:25px;opacity:.92}.source{font-size:17px;margin-top:10px;opacity:.75}
+        header{position:relative;height:205px;padding:27px 48px;color:white;background:linear-gradient(90deg,#082f49 0%,#075985 42%,#0ea5e9 76%,#38bdf8 100%);display:flex;align-items:center;justify-content:space-between;gap:25px;overflow:hidden}
+        header:before{content:"";position:absolute;width:470px;height:470px;border:2px solid rgba(255,255,255,.12);border-radius:50%;right:-155px;top:-210px;box-shadow:0 0 0 45px rgba(255,255,255,.035),0 0 0 100px rgba(255,255,255,.025)}
+        header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,#22c55e 0 30%,#facc15 30% 39%,#38bdf8 39% 100%)}
+        .header-copy{position:relative;z-index:2;min-width:0;flex:1}.header-brand{position:relative;z-index:2;width:180px;height:145px;display:flex;align-items:center;justify-content:center}
+        .brand-logo{width:112px;height:130px;object-fit:contain;object-position:center;filter:drop-shadow(0 7px 12px rgba(0,0,0,.22))}
+        .eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:8px;font-size:14px;font-weight:800;letter-spacing:2.2px;color:#bae6fd}.eyebrow:before{content:"";width:34px;height:3px;border-radius:5px;background:#38bdf8}
+        h1{font-size:47px;margin:0 0 7px;letter-spacing:1px}.subtitle{font-size:25px;opacity:.95}.source{font-size:16px;margin-top:9px;color:#dbeafe}
         main{padding:28px 42px 120px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:white;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(15,60,90,.09);border:1px solid #dbeafe}
         .metric{min-height:150px}.label{font-size:18px;color:#475569;font-weight:700}.value{font-size:36px;font-weight:800;margin:10px 0 5px;color:#075985}.detail{font-size:16px;color:#64748b;line-height:1.35}
         .wide{grid-column:span 2}.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.chart{height:260px}.chart h2,.highlights h2{font-size:22px;margin:0 0 3px}.chart small{color:#64748b}
@@ -327,7 +331,10 @@ async function renderInfographic(summary) {
         .lt-meta{text-align:right}.lt-period{font-size:18px;font-weight:800}.lt-status{display:inline-block;margin-top:7px;padding:5px 12px;border-radius:99px;background:rgba(220,252,231,.95);color:#166534;font-size:14px;font-weight:800}
         .trace{font-size:14px;color:#0369a1;margin-top:7px}
     </style></head><body><div class="page">
-        <header>${logo ? `<img class="brand-logo" src="data:image/png;base64,${logo}">` : ''}<div><h1>KALEIDOSKOP CUACA</h1><div class="subtitle">Pangsuma • ${escapeHtml(summary.period)}${summary.isCurrentMonth && summary.dataThrough ? ` • data s.d. ${formatDay(summary.dataThrough)}` : ''}</div><div class="source">Hasil pengolahan data pengamatan Sinoptik BMKG Satu</div></div></header>
+        <header>
+            <div class="header-copy"><div class="eyebrow">INFORMASI CUACA TERAMATI</div><h1>KALEIDOSKOP CUACA</h1><div class="subtitle">Pangsuma • ${escapeHtml(summary.period)}${summary.isCurrentMonth && summary.dataThrough ? ` • data s.d. ${formatDay(summary.dataThrough)}` : ''}</div><div class="source">Diolah dari pengamatan Sinoptik BMKG Satu</div></div>
+            <div class="header-brand">${logo ? `<img class="brand-logo" src="data:image/png;base64,${logo}">` : ''}</div>
+        </header>
         <main>
             <section class="grid">
                 <div class="card metric"><div class="label">🌡️ Suhu Rata-rata</div><div class="value">${summary.temperature.average.toFixed(1)}°C</div><div class="detail">${tempMin.value.toFixed(1)}°C – ${tempMax.value.toFixed(1)}°C</div></div>
