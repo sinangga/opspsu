@@ -296,6 +296,14 @@ async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
 }
 
 // ================= SCHEDULER =================
+function formatMetarWindDirection(value) {
+    const degrees = Number(value);
+    if (!Number.isFinite(degrees)) return '360';
+    const normalized = ((degrees % 360) + 360) % 360;
+    const rounded = Math.round(normalized / 10) * 10;
+    return String(rounded === 0 ? 360 : rounded).padStart(3, '0');
+}
+
 function registerSchedule(item) {
     const job = schedule.scheduleJob({ hour: item.hour, minute: item.minute, tz: 'Etc/UTC' }, async () => {
         let msg = item.message;
@@ -310,9 +318,9 @@ function registerSchedule(item) {
                 const time = String(item.hour).padStart(2,'0')+String(item.minute).padStart(2,'0');
                 
                 // Wind logic: Calm if < 1 KT
-                const wDir = Math.round(r.wind_dir || 0);
                 const wSpd = Math.round(r.wind_speed || 0);
-                const w = wSpd < 1 ? '00000KT' : `${String(wDir % 360).padStart(3,'0')}${String(wSpd).padStart(2,'0')}KT`;
+                const wDir = formatMetarWindDirection(r.wind_dir);
+                const w = wSpd < 1 ? '00000KT' : `${wDir}${String(wSpd).padStart(2,'0')}KT`;
                 
                 const f = (v) => {
                     const rv = Math.round(v || 0);

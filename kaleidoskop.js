@@ -313,18 +313,21 @@ async function renderInfographic(summary) {
     const tempMin = summary.temperature.minimum;
     const html = `<!doctype html><html><head><meta charset="utf-8"><style>
         *{box-sizing:border-box} body{margin:0;width:1080px;height:1350px;font-family:Arial,sans-serif;background:#eaf4fb;color:#0f172a}
-        .page{width:1080px;height:1350px;background:linear-gradient(180deg,#f8fcff,#e9f5ff);overflow:hidden}
-        header{height:205px;padding:28px 48px;color:white;background:linear-gradient(125deg,#0b2d4d,#075985 58%,#0ea5e9);display:flex;align-items:center;gap:28px}
-        header img{width:105px;height:105px;object-fit:contain;background:white;border-radius:50%;padding:8px}
+        .page{position:relative;width:1080px;height:1350px;background:linear-gradient(180deg,#f8fcff,#e9f5ff);overflow:hidden}
+        header{height:205px;padding:28px 48px;color:white;background:linear-gradient(90deg,#38bdf8 0%,#0ea5e9 30%,#075985 68%,#0b2d4d 100%);display:flex;align-items:center;gap:28px}
+        .brand-logo{width:112px;height:126px;object-fit:contain;object-position:center;filter:drop-shadow(0 5px 9px rgba(0,0,0,.25))}
         h1{font-size:48px;margin:0 0 8px;letter-spacing:1px}.subtitle{font-size:25px;opacity:.92}.source{font-size:17px;margin-top:10px;opacity:.75}
-        main{padding:28px 42px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:white;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(15,60,90,.09);border:1px solid #dbeafe}
+        main{padding:28px 42px 120px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:white;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(15,60,90,.09);border:1px solid #dbeafe}
         .metric{min-height:150px}.label{font-size:18px;color:#475569;font-weight:700}.value{font-size:36px;font-weight:800;margin:10px 0 5px;color:#075985}.detail{font-size:16px;color:#64748b;line-height:1.35}
         .wide{grid-column:span 2}.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.chart{height:260px}.chart h2,.highlights h2{font-size:22px;margin:0 0 3px}.chart small{color:#64748b}
         .highlights{margin-top:18px;padding:22px 28px}.highlights ul{margin:10px 0 0;padding-left:24px}.highlights li{font-size:19px;line-height:1.45;margin:4px 0}
-        footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:0 8px;color:#64748b;font-size:15px}.badge{background:#dcfce7;color:#166534;border-radius:99px;padding:8px 14px;font-weight:700}
+        .lower-third{position:absolute;left:0;right:0;bottom:0;height:94px;color:white;background:linear-gradient(100deg,#082f49 0%,#075985 62%,#0284c7 62%,#0ea5e9 100%);display:flex;align-items:center;justify-content:space-between;padding:0 46px;box-shadow:0 -8px 25px rgba(8,47,73,.16)}
+        .lower-third:before{content:"";position:absolute;top:0;left:0;width:100%;height:5px;background:linear-gradient(90deg,#22c55e 0 33%,#facc15 33% 44%,#38bdf8 44% 100%)}
+        .lt-identity{display:flex;align-items:center;gap:15px}.lt-mark{width:7px;height:48px;border-radius:8px;background:#38bdf8}.lt-title{font-size:21px;font-weight:800;letter-spacing:.3px}.lt-subtitle{margin-top:5px;font-size:15px;color:#bae6fd}
+        .lt-meta{text-align:right}.lt-period{font-size:18px;font-weight:800}.lt-status{display:inline-block;margin-top:7px;padding:5px 12px;border-radius:99px;background:rgba(220,252,231,.95);color:#166534;font-size:14px;font-weight:800}
         .trace{font-size:14px;color:#0369a1;margin-top:7px}
     </style></head><body><div class="page">
-        <header>${logo ? `<img src="data:image/png;base64,${logo}">` : ''}<div><h1>KALEIDOSKOP CUACA</h1><div class="subtitle">Pangsuma • ${escapeHtml(summary.period)}${summary.isCurrentMonth && summary.dataThrough ? ` • data s.d. ${formatDay(summary.dataThrough)}` : ''}</div><div class="source">Hasil pengolahan data pengamatan Sinoptik BMKG Satu</div></div></header>
+        <header>${logo ? `<img class="brand-logo" src="data:image/png;base64,${logo}">` : ''}<div><h1>KALEIDOSKOP CUACA</h1><div class="subtitle">Pangsuma • ${escapeHtml(summary.period)}${summary.isCurrentMonth && summary.dataThrough ? ` • data s.d. ${formatDay(summary.dataThrough)}` : ''}</div><div class="source">Hasil pengolahan data pengamatan Sinoptik BMKG Satu</div></div></header>
         <main>
             <section class="grid">
                 <div class="card metric"><div class="label">🌡️ Suhu Rata-rata</div><div class="value">${summary.temperature.average.toFixed(1)}°C</div><div class="detail">${tempMin.value.toFixed(1)}°C – ${tempMax.value.toFixed(1)}°C</div></div>
@@ -341,8 +344,11 @@ async function renderInfographic(summary) {
                 <div class="card chart"><h2>Suhu Rata-rata Harian</h2><small>derajat Celsius</small>${temperatureChart(summary.chartDays)}</div>
             </section>
             <section class="card highlights"><h2>Catatan Cuaca Bulan Ini</h2><ul>${summary.highlights.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>
-            <footer><span>${escapeHtml(summary.station)} • Informasi cuaca untuk masyarakat</span><span class="badge">Kelengkapan data ${summary.completeness.toFixed(0)}%</span></footer>
         </main>
+        <section class="lower-third">
+            <div class="lt-identity"><span class="lt-mark"></span><div><div class="lt-title">STASIUN METEOROLOGI PANGSUMA</div><div class="lt-subtitle">Informasi cuaca teramati untuk masyarakat • Badan Meteorologi, Klimatologi, dan Geofisika</div></div></div>
+            <div class="lt-meta"><div class="lt-period">${escapeHtml(summary.period)}</div><div class="lt-status">Kelengkapan ${summary.completeness.toFixed(0)}%</div></div>
+        </section>
     </div></body></html>`;
 
     const output = path.join(__dirname, `kaleidoskop_${summary.year}_${String(summary.month).padStart(2, '0')}_${Date.now()}.png`);
