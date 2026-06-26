@@ -130,7 +130,11 @@ async function fetchMonthlyRows(year, month, username, password, onProgress = as
         `${BASE_URL}/api/v21/export/public/download/${filename}?token=${encodeURIComponent(downloadToken)}`,
         { responseType: 'text', timeout: 60000 }
     );
-    return parseCsv(csv.data);
+    return {
+        rows: parseCsv(csv.data),
+        csvText: csv.data,
+        filename: `bmkgsatu_pangsuma_sinoptik_${year}_${String(month).padStart(2, '0')}.csv`
+    };
 }
 
 function weatherCategory(code) {
@@ -452,11 +456,17 @@ async function renderInfographic(summary) {
 }
 
 async function generateMonthlyKaleidoscope(year, month, username, password, onProgress) {
-    const rows = await fetchMonthlyRows(year, month, username, password, onProgress);
+    const data = await fetchMonthlyRows(year, month, username, password, onProgress);
+    const rows = data.rows;
     const summary = summarizeMonthly(rows, year, month);
     await onProgress('Menyusun infografis kaleidoskop');
     const image = await renderInfographic(summary);
-    return { image, summary };
+    return {
+        image,
+        summary,
+        csv: Buffer.from(data.csvText, 'utf8'),
+        csvFilename: data.filename
+    };
 }
 
 module.exports = {
