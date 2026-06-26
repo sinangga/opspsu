@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
@@ -364,25 +364,13 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🌐 BMKGsatu'], ['🚀 AR Weather'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['❌ Close']], resize_keyboard: true } }; }
 function prakiraanMenu() {
     return {
         reply_markup: {
             keyboard: [
                 ['☁️ Infografis Prakiraan'],
                 ['🗺️ Peta Kecamatan (Mini App)'],
-                ['🏠 Back to Home']
-            ],
-            resize_keyboard: true
-        }
-    };
-}
-function arWeatherMenu() {
-    return {
-        reply_markup: {
-            keyboard: [
-                [{ text: "🎥 Buka Kamera AR", web_app: { url: "https://untuk-vercel.vercel.app/ar-weather" } }],
-                [{ text: "🗺️ Buka Peta Kecamatan", web_app: { url: "https://untuk-vercel.vercel.app/kecamatan-map" } }],
                 ['🏠 Back to Home']
             ],
             resize_keyboard: true
@@ -495,15 +483,15 @@ async function sendKaleidoskopResult(cid, period, generator) {
             parse_mode: 'Markdown'
         });
         delete sessions[cid];
-        return bot.sendMessage(cid, 'Infografis kaleidoskop selesai.', { ...backSubMenu('BMKGsatu') });
+        return bot.sendMessage(cid, 'Infografis kaleidoskop selesai.', { ...kaleidoskopBackMenu() });
     } catch (error) {
         console.error('KALEIDOSKOP ERR:', error.message);
         await bot.editMessageText(`*Kaleidoskop gagal dibuat*\n\n${error.message}`, {
             chat_id: cid,
             message_id: loader.message_id,
-            parse_mode: 'Markdown',
-            ...backSubMenu('BMKGsatu')
+            parse_mode: 'Markdown'
         });
+        await bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...kaleidoskopBackMenu() });
         delete sessions[cid];
         return;
     }
@@ -513,6 +501,7 @@ function ikhtisarDateMenu() {
     return { reply_markup: { keyboard: [[`Hari Ini (${t})`], [`Kemarin (${y})`], ['📅 Open Calendar'], ['🏠 Back to Home']], resize_keyboard: true } };
 }
 function backSubMenu(cat) { return { reply_markup: { keyboard: [[`🔙 Back to ${cat.toUpperCase()} MENU`], ['🏠 Back to Home']], resize_keyboard: true } }; }
+function kaleidoskopBackMenu() { return backSubMenu('Kaleidoskop'); }
 function hourPicker() { return { reply_markup: { keyboard: [['00','01','02','03','04','05'],['06','07','08','09','10','11'],['12','13','14','15','16','17'],['18','19','20','21','22','23'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 function minutePicker() { return { reply_markup: { keyboard: [['00','30'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 function weatherPicker() { return { reply_markup: { keyboard: [['Blank (None)'],['TS','BR','-RA','NSW'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
@@ -534,7 +523,7 @@ bot.on('callback_query', async (q) => {
     const cid = q.message.chat.id, data = q.data;
     if (data && data.startsWith('kal_')) {
         await bot.answerCallbackQuery(q.id, { text: 'Pilih periode dari keyboard bawah.' }).catch(() => {});
-        return bot.sendMessage(cid, 'Menu kaleidoskop sekarang memakai keyboard bawah. Silakan buka lagi dari BMKGsatu.', { ...bmkgsatuMenu() });
+        return bot.sendMessage(cid, 'Menu kaleidoskop sekarang memakai keyboard bawah. Silakan buka lagi dari menu Kaleidoskop.', { ...bmkgsatuMenu() });
     }
     if (data === 'kal_cancel') {
         delete sessions[cid];
@@ -569,7 +558,7 @@ bot.on('callback_query', async (q) => {
         await bot.deleteMessage(cid, q.message.message_id).catch(() => {});
         if (!isAuthenticated(cid)) {
             delete sessions[cid];
-            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         const period = `${KALEIDOSKOP_MONTHS[month - 1]} ${year}`;
@@ -589,14 +578,14 @@ bot.on('callback_query', async (q) => {
                 parse_mode: 'Markdown'
             });
             delete sessions[cid];
-            return bot.sendMessage(cid, '✅ Infografis kaleidoskop selesai.', { ...backSubMenu('BMKGsatu') });
+            return bot.sendMessage(cid, '✅ Infografis kaleidoskop selesai.', { ...kaleidoskopBackMenu() });
         } catch (error) {
             console.error('KALEIDOSKOP ERR:', error.message);
             await bot.editMessageText(`❌ *Kaleidoskop gagal dibuat*\n\n${error.message}`, {
                 chat_id: cid,
                 message_id: loader.message_id,
                 parse_mode: 'Markdown',
-                ...backSubMenu('BMKGsatu')
+                ...kaleidoskopBackMenu()
             });
             delete sessions[cid];
             return;
@@ -662,12 +651,12 @@ bot.on('message', async (msg) => {
     if (!isAllowed(msg) || !msg.text) return;
     const text = msg.text, cid = msg.chat.id;
 
-    if (text === '/start' || text === '🏠 Back to Home') { delete sessions[cid]; return bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*\nSelamat datang di Pangsuma Budi.', { parse_mode: 'Markdown', ...mainMenu() }); }
+    if (text === '/start' || text === '🏠 Back to Home') { delete sessions[cid]; return bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*\nPilih menu yang Anda inginkan.', { parse_mode: 'Markdown', ...mainMenu() }); }
     
     // Auth Check
     const isAuth = isAuthenticated(cid);
     const session = sessions[cid];
-    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🌐 BMKGsatu' || text === '/bmkgsatu') && !isAuth) { 
+    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop') && !isAuth) {
         sessions[cid] = { mode: 'auth_email', target: text }; 
         return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' }); 
     }
@@ -687,8 +676,8 @@ bot.on('message', async (msg) => {
             let welcomeMsg = '✅ *Verifikasi Berhasil!* Akses dibuka.\n';
             if (target === '📊 Graph' || target === '/graph') {
                 welcomeMsg += 'Silakan ketik /graph atau pilih menu 📊 Graph kembali.';
-            } else if (target === '🌐 BMKGsatu' || target === '/bmkgsatu') {
-                welcomeMsg += 'Silakan ketik /bmkgsatu atau pilih menu 🌐 BMKGsatu kembali.';
+            } else if (target === '🗓 Kaleidoskop' || target === '🌐 BMKGsatu' || target === '/bmkgsatu' || target === '/kaleidoskop') {
+                welcomeMsg += 'Silakan pilih menu Kaleidoskop kembali.';
             } else {
                 welcomeMsg += 'Silakan ketik /metar untuk masuk ke menu METAR.';
             }
@@ -707,12 +696,12 @@ bot.on('message', async (msg) => {
         }
         return bot.sendMessage(cid, '📊 *GRAPH MENU*', { parse_mode: 'Markdown', ...graphMenu() });
     }
-    if (text === '🔙 Back to BMKGSATU MENU') {
+    if (text === '🔙 Back to BMKGSATU MENU' || text === '🔙 Back to KALEIDOSKOP MENU') {
         if (!isAuth) {
-            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
-        return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
+        return bot.sendMessage(cid, '🗓 *KALEIDOSKOP CUACA*\nPilih periode ikhtisar cuaca yang ingin dibuat.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
     }
     
     if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
@@ -744,9 +733,7 @@ bot.on('message', async (msg) => {
     if (text === '🌐 Prakiraan Kecamatan') { return bot.sendMessage(cid, '🌐 *Pilih Kecamatan:*', { parse_mode: 'Markdown', ...kecamatanMenu() }); }
     if (text === '✈️ METAR' || text === '/metar') return bot.sendMessage(cid, '✈️ *METAR MENU*\nSilakan pilih fitur operasional:', { parse_mode: 'Markdown', ...metarMenu() });
     if (text === '📊 Graph' || text === '/graph') return bot.sendMessage(cid, '📊 *GRAPH MENU*\nPilih jenis grafik:', { parse_mode: 'Markdown', ...graphMenu() });
-    if (text === '🌐 BMKGsatu' || text === '/bmkgsatu') return bot.sendMessage(cid, '🌐 *BMKGsatu MENU*\nData Sinoptik diolah menjadi informasi cuaca untuk masyarakat.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
-
-    if (text === '🚀 AR Weather') { return bot.sendMessage(cid, '🚀 *AR WEATHER & MAP PANGSUMA*\n\nPilih fitur navigasi cuaca:', { parse_mode: 'Markdown', ...arWeatherMenu() }); }
+    if (text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop') return bot.sendMessage(cid, '🗓 *KALEIDOSKOP CUACA*\nPilih periode ikhtisar cuaca yang ingin dibuat.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
 
     if (text === '☁️ Prakiraan') {
         const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
@@ -769,7 +756,7 @@ bot.on('message', async (msg) => {
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text.includes('Kaleidoskop Bulanan')) {
         if (!isAuth) {
-            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         sessions[cid] = { mode: 'kaleidoskop_year' };
@@ -780,7 +767,7 @@ bot.on('message', async (msg) => {
     }
     if (text.includes('Kaleidoskop Mingguan')) {
         if (!isAuth) {
-            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         const options = buildKaleidoskopWeekOptions();
@@ -792,7 +779,7 @@ bot.on('message', async (msg) => {
     }
     if (text === '🔍 Cek Koneksi') {
         if (!isAuth) {
-            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
         }
         const ldr = await bot.sendMessage(cid, '⏳ *Menghubungi BMKGsatu...*', { parse_mode: 'Markdown' });
@@ -805,15 +792,17 @@ bot.on('message', async (msg) => {
             const connected = Boolean(login.data?.data?.token);
             await bot.editMessageText(
                 connected
-                    ? `🌐 *BMKGsatu - STATUS*\n\n✅ *Status:* Terhubung\n📍 *Stasiun:* ${BMKGSATU_STATION_NAME}`
+                    ? `🗓 *Kaleidoskop - Status Data*\n\n✅ *Status:* Terhubung\n📍 *Stasiun:* ${BMKGSATU_STATION_NAME}`
                     : '❌ *BMKGsatu tidak mengembalikan token login.*',
-                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' }
             );
+            await bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...kaleidoskopBackMenu() });
         } catch (e) {
             await bot.editMessageText(
                 `❌ *Koneksi BMKGsatu gagal*\n\n${e.message}`,
-                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown', ...backSubMenu('BMKGsatu') }
+                { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' }
             );
+            await bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...kaleidoskopBackMenu() });
         }
         return;
     }
