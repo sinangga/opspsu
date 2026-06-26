@@ -97,6 +97,15 @@ function monthRange(year, month) {
     };
 }
 
+function observationRange(startDate, endDate) {
+    const nextDay = new Date(`${endDate}T00:00:00Z`);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    return {
+        from: `${startDate}T00:00:00Z`,
+        to: nextDay.toISOString().replace('.000', '')
+    };
+}
+
 async function login(username, password) {
     if (!username || !password) throw new Error('Kredensial BMKG Satu belum dikonfigurasi');
     const response = await axios.post(
@@ -109,15 +118,14 @@ async function login(username, password) {
     return token;
 }
 
-async function fetchMonthlyRows(year, month, username, password, onProgress = async () => {}) {
+async function fetchRowsByRange(range, username, password, onProgress = async () => {}, label = 'periode') {
     const token = await login(username, password);
     const api = axios.create({
         baseURL: `${BASE_URL}/api/v21/`,
         headers: { Authorization: `Bearer ${token}` },
         timeout: 60000
     });
-    const range = monthRange(year, month);
-    await onProgress('Meminta data bulanan dari BMKG Satu');
+    await onProgress(`Meminta data ${label} dari BMKG Satu`);
     const request = await api.post('export/observation/by-station', {
         data_type: 'sinoptik',
         parameter_names: PARAMETERS,
@@ -134,10 +142,10 @@ async function fetchMonthlyRows(year, month, username, password, onProgress = as
         const status = await api.get(`export/observation/job/${jobId}`);
         job = status.data?.data;
         if (job?.status === 'successful') break;
-        if (job?.status === 'failed') throw new Error('Proses data bulanan gagal di BMKG Satu');
+        if (job?.status === 'failed') throw new Error(`Proses data ${label} gagal di BMKG Satu`);
     }
     if (job?.status !== 'successful' || !job.file_url) {
-        throw new Error('Proses data bulanan melewati batas waktu');
+        throw new Error(`Proses data ${label} melewati batas waktu`);
     }
 
     await onProgress('Mengunduh dan memeriksa data pengamatan');
@@ -152,6 +160,10 @@ async function fetchMonthlyRows(year, month, username, password, onProgress = as
     return {
         rows: parseCsv(csv.data)
     };
+}
+
+async function fetchMonthlyRows(year, month, username, password, onProgress = async () => {}) {
+    return fetchRowsByRange(monthRange(year, month), username, password, onProgress, 'bulanan');
 }
 
 function weatherCategory(code) {
@@ -197,6 +209,14 @@ function isDateInMonth(dateText, year, month) {
     return dateText.startsWith(`${year}-${String(month).padStart(2, '0')}-`);
 }
 
+function isDateInRange(dateText, startDate, endDate) {
+    return dateText >= startDate && dateText <= endDate;
+}
+
+function daysBetweenInclusive(startDate, endDate) {
+    return Math.round((new Date(`${endDate}T00:00:00Z`) - new Date(`${startDate}T00:00:00Z`)) / 86400000) + 1;
+}
+
 function ensureDaily(daily, date) {
     if (!daily.has(date)) {
         daily.set(date, {
@@ -236,8 +256,13 @@ function rainfallCategory(value) {
     return null;
 }
 
-function summarizeMonthly(rows, year, month) {
-    if (!rows.length) throw new Error('Data pada bulan tersebut tidak tersedia');
+function summarizeMonthly(rows, year, month, options = {}) {
+    const startDate = options.startDate || `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = options.endDate || `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth(year, month)).padStart(2, '0')}`;
+    const period = options.period || `${MONTHS[month - 1]} ${year}`;
+    const periodType = options.periodType || 'Bulanan';
+    const isTargetDate = dateText => isDateInRange(dateText, startDate, endDate);
+    if (!rows.length) throw new Error('Data pada periode tersebut tidak tersedia');
     const temps = [], humidities = [], winds = [], visibilities = [];
     const sectors = new Map(), weather = new Map(), daily = new Map();
     const visibilityFrequency = new Map();
@@ -253,7 +278,7 @@ function summarizeMonthly(rows, year, month) {
         if (!lastTimestamp || timestamp > lastTimestamp) lastTimestamp = timestamp;
         const date = timestamp.slice(0, 10);
         const hour = Number(timestamp.slice(11, 13));
-        const inTargetMonth = isDateInMonth(date, year, month);
+        const inTargetPeriod = isTargetDate(date);
 
         // In synoptic data, minimum temperature reported at 00 UTC belongs to the previous day.
         const minimumTemp = firstValidRange(row, [
@@ -266,7 +291,7 @@ function summarizeMonthly(rows, year, month) {
         ], -10, 50);
         if (hour === 0 && minimumTemp !== null) {
             const targetDate = shiftDate(date, -1);
-            if (isDateInMonth(targetDate, year, month)) {
+            if (isTargetDate(targetDate)) {
                 const targetDay = ensureDaily(daily, targetDate);
                 targetDay.tempMin = minimumTemp;
                 if (!tempMin || minimumTemp < tempMin.value) tempMin = { value: minimumTemp, date: targetDate };
@@ -276,7 +301,7 @@ function summarizeMonthly(rows, year, month) {
         // rainfall_24h_rrrr reported at 00 UTC is the previous day's total rainfall.
         if (hour === 0) {
             const targetDate = shiftDate(date, -1);
-            if (isDateInMonth(targetDate, year, month)) {
+            if (isTargetDate(targetDate)) {
                 const targetDay = ensureDaily(daily, targetDate);
                 const rainfall = numberOrNull(fieldValue(row, ['rainfall_24h_rrrr', 'Rainfall 24h Rrrr']));
                 if (rainfall === 8888) {
@@ -288,7 +313,7 @@ function summarizeMonthly(rows, year, month) {
             }
         }
 
-        if (!inTargetMonth) continue;
+        if (!inTargetPeriod) continue;
         observationCount++;
         if (!lastTargetTimestamp || timestamp > lastTargetTimestamp) lastTargetTimestamp = timestamp;
 
@@ -349,7 +374,7 @@ function summarizeMonthly(rows, year, month) {
     if (!temps.length) throw new Error('Parameter suhu bulanan tidak tersedia');
     if (!tempMin || !tempMax) {
         for (const [date, day] of daily.entries()) {
-            if (!isDateInMonth(date, year, month) || !day.temps.length) continue;
+            if (!isTargetDate(date) || !day.temps.length) continue;
             const fallbackMin = Math.min(...day.temps);
             const fallbackMax = Math.max(...day.temps);
             if (!tempMin || fallbackMin < tempMin.value) tempMin = { value: fallbackMin, date };
@@ -379,17 +404,22 @@ function summarizeMonthly(rows, year, month) {
     const dominantWeather = [...weather.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Tidak tersedia';
     const avg = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
     const now = new Date();
-    const isCurrentMonth = year === now.getUTCFullYear() && month === now.getUTCMonth() + 1;
-    const expected = isCurrentMonth
-        ? ((now.getUTCDate() - 1) * 24 + now.getUTCHours() + 1)
-        : daysInMonth(year, month) * 24;
+    const today = now.toISOString().slice(0, 10);
+    const isCurrentMonth = today >= startDate && today <= endDate;
+    const periodDays = daysBetweenInclusive(startDate, endDate);
+    const elapsedDays = isCurrentMonth
+        ? Math.max(0, daysBetweenInclusive(startDate, today) - 1) + ((now.getUTCHours() + 1) / 24)
+        : periodDays;
+    const expected = elapsedDays * 24;
     const completeness = Math.min(100, observationCount / expected * 100);
     const activeDays = dailyEntries.filter(([, day]) => day.temps.length).length;
-    const chartDays = Array.from({ length: daysInMonth(year, month) }, (_, index) => {
-        const date = `${year}-${String(month).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`;
+    const chartDays = Array.from({ length: periodDays }, (_, index) => {
+        const currentDate = new Date(`${startDate}T00:00:00Z`);
+        currentDate.setUTCDate(currentDate.getUTCDate() + index);
+        const date = currentDate.toISOString().slice(0, 10);
         const day = daily.get(date);
         return {
-            day: index + 1,
+            day: Number(date.slice(8, 10)),
             rain: day?.rainfall ?? null,
             trace: day?.trace || false,
             temp: day?.temps?.length ? avg(day.temps) : null,
@@ -405,7 +435,10 @@ function summarizeMonthly(rows, year, month) {
     if (!highlights.length) highlights.push('Kondisi cuaca bulanan cenderung stabil berdasarkan pengamatan yang tersedia.');
 
     return {
-        year, month, period: `${MONTHS[month - 1]} ${year}`,
+        year, month, period,
+        periodType,
+        startDate,
+        endDate,
         isCurrentMonth,
         dataThrough: lastTargetTimestamp ? lastTargetTimestamp.slice(0, 10) : lastTimestamp?.slice(0, 10) || null,
         station: STATION_NAME,
@@ -597,7 +630,7 @@ async function renderInfographic(summary) {
                 <div class="card group group-2">
                     <h2>🌧️ <span>Hujan</span></h2>
                     <div class="metric-list">
-                        <div class="mini"><div class="label">Total Bulanan</div><div class="value">${summary.rainfall.total.toFixed(1)} mm</div><div class="detail">${summary.rainfall.rainyDays} hari hujan</div></div>
+                        <div class="mini"><div class="label">Total ${summary.periodType}</div><div class="value">${summary.rainfall.total.toFixed(1)} mm</div><div class="detail">${summary.rainfall.rainyDays} hari hujan</div></div>
                         <div class="mini"><div class="label">Harian Tertinggi</div><div class="value">${rainMax ? `${rainMax.value.toFixed(1)} mm` : '–'}</div><div class="detail">${rainMax ? formatDay(rainMax.date) : 'Tidak tersedia'}</div></div>
                     </div>
                 </div>
@@ -629,11 +662,11 @@ async function renderInfographic(summary) {
             </section>
             <section class="charts">
                 <div class="card chart"><h2>Curah Hujan Harian</h2><small>milimeter per hari</small>${rainChart(summary.chartDays)}</div>
-                <div class="card chart"><h2>Windrose Bulanan</h2><small>frekuensi arah dan kelas kecepatan angin</small>${windRoseChart(summary.wind.rose)}</div>
+                <div class="card chart"><h2>Windrose ${summary.periodType}</h2><small>frekuensi arah dan kelas kecepatan angin</small>${windRoseChart(summary.wind.rose)}</div>
             </section>
             <section class="bottom-grid">
                 <div class="card rain-class"><h2>Kejadian Hujan per Kriteria</h2><small>tanggal kejadian berdasarkan curah hujan harian BMKG</small>${rainEventList(summary.rainfall.events)}</div>
-                <div class="card highlights"><h2>Catatan Cuaca Bulan Ini</h2><ul>${summary.highlights.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+                <div class="card highlights"><h2>Catatan Cuaca Periode Ini</h2><ul>${summary.highlights.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
             </section>
         </main>
         <section class="lower-third">
@@ -642,7 +675,7 @@ async function renderInfographic(summary) {
         </section>
     </div></body></html>`;
 
-    const output = path.join(__dirname, `kaleidoskop_${summary.year}_${String(summary.month).padStart(2, '0')}_${Date.now()}.png`);
+    const output = path.join(__dirname, `kaleidoskop_${summary.startDate}_${summary.endDate}_${Date.now()}.png`);
     await nodeHtmlToImage({
         output,
         html,
@@ -668,9 +701,28 @@ async function generateMonthlyKaleidoscope(year, month, username, password, onPr
     };
 }
 
+async function generateWeeklyKaleidoscope(startDate, endDate, username, password, onProgress) {
+    const data = await fetchRowsByRange(observationRange(startDate, endDate), username, password, onProgress, 'mingguan');
+    const rows = data.rows;
+    const period = `${formatDay(startDate)} - ${formatDay(endDate)}`;
+    const summary = summarizeMonthly(rows, Number(startDate.slice(0, 4)), Number(startDate.slice(5, 7)), {
+        startDate,
+        endDate,
+        period,
+        periodType: 'Mingguan'
+    });
+    await onProgress('Menyusun infografis kaleidoskop');
+    const image = await renderInfographic(summary);
+    return {
+        image,
+        summary
+    };
+}
+
 module.exports = {
     MONTHS,
     parseCsv,
     summarizeMonthly,
-    generateMonthlyKaleidoscope
+    generateMonthlyKaleidoscope,
+    generateWeeklyKaleidoscope
 };

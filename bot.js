@@ -7,7 +7,7 @@ const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
 const { generatePrakiraanImages } = require('./prakiraan');
-const { MONTHS: KALEIDOSKOP_MONTHS, generateMonthlyKaleidoscope } = require('./kaleidoskop');
+const { MONTHS: KALEIDOSKOP_MONTHS, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
 const kecamatanMap = require('./DashboardNextJS/kecamatan_map.json');
 
 // ================= CONFIG =================
@@ -394,31 +394,119 @@ function metarMenu() { return { reply_markup: { keyboard: [['📊 Realtime Data'
 function bmkgsatuMenu() { return { reply_markup: { keyboard: [['🗓 Kaleidoskop Bulanan'], ['🔍 Cek Koneksi', '🏠 Back to Home']], resize_keyboard: true } }; }
 function kaleidoskopYearKeyboard() {
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 6 }, (_, index) => currentYear - index);
+    const years = Array.from({ length: 6 }, (_, index) => String(currentYear - index));
     return {
-        inline_keyboard: [
-            ...Array.from({ length: Math.ceil(years.length / 3) }, (_, row) =>
-                years.slice(row * 3, row * 3 + 3).map(year => ({ text: String(year), callback_data: `kal_year_${year}` }))
-            ),
-            [{ text: '❌ Batal', callback_data: 'kal_cancel' }]
-        ]
+        keyboard: [...chunkKeyboard(years, 3), ['\u274c Cancel', '\ud83c\udfe0 Back to Home']],
+        resize_keyboard: true
     };
 }
 function kaleidoskopMonthKeyboard(year) {
     const current = new Date();
     const months = KALEIDOSKOP_MONTHS.map((name, index) => ({ name, month: index + 1 }))
-        .filter(item => year < current.getFullYear() || item.month <= current.getMonth() + 1);
+        .filter(item => year < current.getFullYear() || item.month <= current.getMonth() + 1)
+        .map(item => item.name);
     return {
-        inline_keyboard: [
-            ...Array.from({ length: Math.ceil(months.length / 3) }, (_, row) =>
-                months.slice(row * 3, row * 3 + 3).map(item => ({
-                    text: item.name.slice(0, 3),
-                    callback_data: `kal_month_${year}_${item.month}`
-                }))
-            ),
-            [{ text: '⬅️ Pilih Tahun', callback_data: 'kal_back_year' }]
-        ]
+        keyboard: [...chunkKeyboard(months, 3), ['\u2b05\ufe0f Pilih Tahun'], ['\u274c Cancel', '\ud83c\udfe0 Back to Home']],
+        resize_keyboard: true
     };
+}
+function chunkKeyboard(items, size) {
+    return Array.from({ length: Math.ceil(items.length / size) }, (_, row) => items.slice(row * size, row * size + size));
+}
+function kaleidoskopYearReplyKeyboard() {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 6 }, (_, index) => String(currentYear - index));
+    return {
+        reply_markup: {
+            keyboard: [...chunkKeyboard(years, 3), ['\u274c Cancel', '\ud83c\udfe0 Back to Home']],
+            resize_keyboard: true
+        }
+    };
+}
+function kaleidoskopMonthReplyKeyboard(year) {
+    const current = new Date();
+    const months = KALEIDOSKOP_MONTHS.map((name, index) => ({ name, month: index + 1 }))
+        .filter(item => year < current.getFullYear() || item.month <= current.getMonth() + 1)
+        .map(item => item.name);
+    return {
+        reply_markup: {
+            keyboard: [...chunkKeyboard(months, 3), ['\u2b05\ufe0f Pilih Tahun'], ['\u274c Cancel', '\ud83c\udfe0 Back to Home']],
+            resize_keyboard: true
+        }
+    };
+}
+function formatKeyboardDate(dateText) {
+    return `${Number(dateText.slice(8, 10))} ${KALEIDOSKOP_MONTHS[Number(dateText.slice(5, 7)) - 1]} ${dateText.slice(0, 4)}`;
+}
+function buildKaleidoskopWeekOptions() {
+    const today = new Date();
+    const utcToday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const day = utcToday.getUTCDay() || 7;
+    const currentMonday = new Date(utcToday);
+    currentMonday.setUTCDate(utcToday.getUTCDate() - day + 1);
+    return Array.from({ length: 8 }, (_, index) => {
+        const start = new Date(currentMonday);
+        start.setUTCDate(currentMonday.getUTCDate() - index * 7);
+        const end = new Date(start);
+        end.setUTCDate(start.getUTCDate() + 6);
+        if (end > utcToday) end.setTime(utcToday.getTime());
+        const startDate = start.toISOString().slice(0, 10);
+        const endDate = end.toISOString().slice(0, 10);
+        return {
+            label: `${formatKeyboardDate(startDate)} - ${formatKeyboardDate(endDate)}`,
+            startDate,
+            endDate
+        };
+    });
+}
+function kaleidoskopWeekReplyKeyboard(options) {
+    return {
+        reply_markup: {
+            keyboard: [...options.map(option => [option.label]), ['\u274c Cancel', '\ud83c\udfe0 Back to Home']],
+            resize_keyboard: true
+        }
+    };
+}
+function bmkgsatuMenu() {
+    return {
+        reply_markup: {
+            keyboard: [
+                ['\ud83d\uddd3 Kaleidoskop Bulanan', '\ud83d\udcc5 Kaleidoskop Mingguan'],
+                ['\ud83d\udd0d Cek Koneksi', '\ud83c\udfe0 Back to Home']
+            ],
+            resize_keyboard: true
+        }
+    };
+}
+async function sendKaleidoskopResult(cid, period, generator) {
+    const loader = await bot.sendMessage(cid, `*Menyiapkan Kaleidoskop ${period}...*`, { parse_mode: 'Markdown' });
+    try {
+        const updateProgress = async text => {
+            await bot.editMessageText(`*Kaleidoskop ${period}*\n${text}...`, {
+                chat_id: cid,
+                message_id: loader.message_id,
+                parse_mode: 'Markdown'
+            });
+        };
+        const result = await generator(updateProgress);
+        await bot.deleteMessage(cid, loader.message_id).catch(() => {});
+        await bot.sendPhoto(cid, result.image, {
+            caption: `*Kaleidoskop Cuaca Pangsuma - ${period}*\n\nDiolah dari ${result.summary.observationCount} pengamatan Sinoptik.`,
+            parse_mode: 'Markdown'
+        });
+        delete sessions[cid];
+        return bot.sendMessage(cid, 'Infografis kaleidoskop selesai.', { ...backSubMenu('BMKGsatu') });
+    } catch (error) {
+        console.error('KALEIDOSKOP ERR:', error.message);
+        await bot.editMessageText(`*Kaleidoskop gagal dibuat*\n\n${error.message}`, {
+            chat_id: cid,
+            message_id: loader.message_id,
+            parse_mode: 'Markdown',
+            ...backSubMenu('BMKGsatu')
+        });
+        delete sessions[cid];
+        return;
+    }
 }
 function ikhtisarDateMenu() { 
     const t = new Date().toISOString().split('T')[0], y = new Date(Date.now()-86400000).toISOString().split('T')[0];
@@ -444,6 +532,10 @@ function createCalendarKeyboard(year, month) {
 bot.on('callback_query', async (q) => {
     if (!isAllowed(q)) return;
     const cid = q.message.chat.id, data = q.data;
+    if (data && data.startsWith('kal_')) {
+        await bot.answerCallbackQuery(q.id, { text: 'Pilih periode dari keyboard bawah.' }).catch(() => {});
+        return bot.sendMessage(cid, 'Menu kaleidoskop sekarang memakai keyboard bawah. Silakan buka lagi dari BMKGsatu.', { ...bmkgsatuMenu() });
+    }
     if (data === 'kal_cancel') {
         delete sessions[cid];
         await bot.answerCallbackQuery(q.id);
@@ -456,7 +548,7 @@ bot.on('callback_query', async (q) => {
             chat_id: cid,
             message_id: q.message.message_id,
             parse_mode: 'Markdown',
-            reply_markup: kaleidoskopYearKeyboard()
+            ...kaleidoskopYearReplyKeyboard()
         });
     }
     if (data.startsWith('kal_year_')) {
@@ -675,7 +767,7 @@ bot.on('message', async (msg) => {
 
     if (text === '📊 Realtime Data') { const rt = await fetchRealtimeData(); return bot.sendMessage(cid, rt, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '🔌 Check Connection') { const up = await verifyConnection(); return bot.sendMessage(cid, up ? '✅ *Server REACHABLE*' : '❌ *Server UNREACHABLE*', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
-    if (text === '🗓 Kaleidoskop Bulanan') {
+    if (text.includes('Kaleidoskop Bulanan')) {
         if (!isAuth) {
             sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
@@ -684,6 +776,18 @@ bot.on('message', async (msg) => {
         return bot.sendMessage(cid, `🗓 *Kaleidoskop Cuaca Bulanan*\n\nSumber: Sinoptik BMKG Satu\nStasiun: ${BMKGSATU_STATION_NAME}\n\nPilih tahun:`, {
             parse_mode: 'Markdown',
             reply_markup: kaleidoskopYearKeyboard()
+        });
+    }
+    if (text.includes('Kaleidoskop Mingguan')) {
+        if (!isAuth) {
+            sessions[cid] = { mode: 'auth_email', target: '🌐 BMKGsatu' };
+            return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        }
+        const options = buildKaleidoskopWeekOptions();
+        sessions[cid] = { mode: 'kaleidoskop_week', options };
+        return bot.sendMessage(cid, `📅 *Kaleidoskop Cuaca Mingguan*\n\nSumber: Sinoptik BMKG Satu\nStasiun: ${BMKGSATU_STATION_NAME}\n\nPilih periode minggu:`, {
+            parse_mode: 'Markdown',
+            ...kaleidoskopWeekReplyKeyboard(options)
         });
     }
     if (text === '🔍 Cek Koneksi') {
@@ -733,6 +837,43 @@ bot.on('message', async (msg) => {
 
     // Session Processing
     if (!session) return;
+    if (session.mode === 'kaleidoskop_year') {
+        const year = Number(text);
+        if (!Number.isInteger(year) || year < 2000 || year > new Date().getFullYear()) {
+            return bot.sendMessage(cid, 'Pilih tahun dari keyboard yang tersedia.', { ...kaleidoskopYearReplyKeyboard() });
+        }
+        sessions[cid] = { mode: 'kaleidoskop_month', year };
+        return bot.sendMessage(cid, `🗓 *Kaleidoskop ${year}*\nPilih bulan:`, {
+            parse_mode: 'Markdown',
+            ...kaleidoskopMonthReplyKeyboard(year)
+        });
+    }
+    if (session.mode === 'kaleidoskop_month') {
+        if (text.includes('Pilih Tahun')) {
+            sessions[cid] = { mode: 'kaleidoskop_year' };
+            return bot.sendMessage(cid, '🗓 *Pilih tahun kaleidoskop:*', {
+                parse_mode: 'Markdown',
+                ...kaleidoskopYearReplyKeyboard()
+            });
+        }
+        const month = KALEIDOSKOP_MONTHS.findIndex(name => name.toLowerCase() === text.toLowerCase()) + 1;
+        if (!month) {
+            return bot.sendMessage(cid, 'Pilih bulan dari keyboard yang tersedia.', { ...kaleidoskopMonthReplyKeyboard(session.year) });
+        }
+        const period = `${KALEIDOSKOP_MONTHS[month - 1]} ${session.year}`;
+        return sendKaleidoskopResult(cid, period, updateProgress =>
+            generateMonthlyKaleidoscope(session.year, month, BMKGSATU_USER, BMKGSATU_PASS, updateProgress)
+        );
+    }
+    if (session.mode === 'kaleidoskop_week') {
+        const option = (session.options || []).find(item => item.label === text);
+        if (!option) {
+            return bot.sendMessage(cid, 'Pilih periode minggu dari keyboard yang tersedia.', { ...kaleidoskopWeekReplyKeyboard(session.options || buildKaleidoskopWeekOptions()) });
+        }
+        return sendKaleidoskopResult(cid, option.label, updateProgress =>
+            generateWeeklyKaleidoscope(option.startDate, option.endDate, BMKGSATU_USER, BMKGSATU_PASS, updateProgress)
+        );
+    }
     if (session.mode === 'send_now') { 
         bot.sendMessage(cid, '⏳ *Sedang mengirim METAR...*', { parse_mode: 'Markdown' });
         if (await sendMetar(text)) { 
