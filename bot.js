@@ -52,12 +52,28 @@ function isAllowed(msg) {
     return true;
 }
 
+function latestOtpResetAt(nowMs = Date.now()) {
+    const wibOffsetMs = 7 * 60 * 60 * 1000;
+    const local = new Date(nowMs + wibOffsetMs);
+    const localYear = local.getUTCFullYear();
+    const localMonth = local.getUTCMonth();
+    const localDate = local.getUTCDate();
+    const localDay = local.getUTCDay();
+    const resetDays = [1, 4]; // Monday and Thursday, WIB.
+    for (let offset = 0; offset < 7; offset++) {
+        const candidateDay = (localDay - offset + 7) % 7;
+        if (resetDays.includes(candidateDay)) {
+            return Date.UTC(localYear, localMonth, localDate - offset, 0, 0, 0) - wibOffsetMs;
+        }
+    }
+    return 0;
+}
+
 function isAuthenticated(userId) {
     const user = verifiedUsers[userId];
     if (!user) return false;
     const now = Date.now();
-    if (now - user.lastVerified > 7 * 24 * 60 * 60 * 1000) return false;
-    if (now - user.lastActive > 3 * 24 * 60 * 60 * 1000) return false;
+    if (!user.lastVerified || user.lastVerified < latestOtpResetAt(now)) return false;
     user.lastActive = now;
     saveUsers();
     return true;
@@ -658,7 +674,7 @@ bot.on('message', async (msg) => {
     const session = sessions[cid];
     if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop') && !isAuth) {
         sessions[cid] = { mode: 'auth_email', target: text }; 
-        return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' }); 
+        return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nOTP wajib diperbarui setiap Senin dan Kamis.\nSilakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
     }
     if (session && session.mode === 'auth_email') {
         if (!text.endsWith('@bmkg.go.id')) return bot.sendMessage(cid, '❌ *Format Salah:* Gunakan email resmi @bmkg.go.id', { parse_mode: 'Markdown' });
