@@ -12,6 +12,8 @@ const MONTHS = [
 ];
 const PARAMETERS = [
     'temp_drybulb_c_tttttt',
+    'temp_min_c_tntntn',
+    'temp_max_c_txtxtx',
     'relative_humidity_pc',
     'rainfall_24h_rrrr',
     'wind_dir_deg_dd',
@@ -61,6 +63,22 @@ function numberOrNull(value) {
     return Number.isFinite(number) ? number : null;
 }
 
+function normalizeFieldName(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+function fieldValue(row, names) {
+    for (const name of names) {
+        if (Object.prototype.hasOwnProperty.call(row, name)) return row[name];
+    }
+    const normalized = new Map(Object.keys(row).map(key => [normalizeFieldName(key), row[key]]));
+    for (const name of names) {
+        const value = normalized.get(normalizeFieldName(name));
+        if (value !== undefined) return value;
+    }
+    return undefined;
+}
+
 function validRange(value, min, max) {
     const number = numberOrNull(value);
     return number !== null && number >= min && number <= max ? number : null;
@@ -71,10 +89,10 @@ function daysInMonth(year, month) {
 }
 
 function monthRange(year, month) {
-    const lastDay = daysInMonth(year, month);
+    const nextMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0));
     return {
         from: `${year}-${String(month).padStart(2, '0')}-01T00:00:00Z`,
-        to: `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59Z`
+        to: nextMonth.toISOString().replace('.000', '')
     };
 }
 
@@ -166,6 +184,37 @@ function formatDay(dateText) {
     return `${day} ${MONTHS[Number(dateText.slice(5, 7)) - 1]}`;
 }
 
+function shiftDate(dateText, offsetDays) {
+    const date = new Date(`${dateText}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + offsetDays);
+    return date.toISOString().slice(0, 10);
+}
+
+function isDateInMonth(dateText, year, month) {
+    return dateText.startsWith(`${year}-${String(month).padStart(2, '0')}-`);
+}
+
+function ensureDaily(daily, date) {
+    if (!daily.has(date)) {
+        daily.set(date, {
+            temps: [],
+            rainfall: null,
+            trace: false,
+            tempMin: null,
+            tempMax: null
+        });
+    }
+    return daily.get(date);
+}
+
+function firstValidRange(row, keys, min, max) {
+    for (const key of keys) {
+        const value = validRange(fieldValue(row, [key]), min, max);
+        if (value !== null) return value;
+    }
+    return null;
+}
+
 function summarizeMonthly(rows, year, month) {
     if (!rows.length) throw new Error('Data pada bulan tersebut tidak tersedia');
     const temps = [], humidities = [], winds = [];
@@ -173,29 +222,81 @@ function summarizeMonthly(rows, year, month) {
     const windRoseBins = Array.from({ length: 8 }, () => [0, 0, 0, 0]);
     let tempMax = null, tempMin = null, windMax = null;
     let lastTimestamp = null;
+    let lastTargetTimestamp = null;
+    let observationCount = 0;
 
     for (const row of rows) {
-        const timestamp = row.data_timestamp?.replace(' ', 'T');
+        const timestamp = fieldValue(row, ['data_timestamp', 'Data Timestamp'])?.replace(' ', 'T');
         if (!timestamp) continue;
         if (!lastTimestamp || timestamp > lastTimestamp) lastTimestamp = timestamp;
         const date = timestamp.slice(0, 10);
         const hour = Number(timestamp.slice(11, 13));
-        if (!daily.has(date)) daily.set(date, { temps: [], rainfall: null, trace: false });
-        const day = daily.get(date);
+        const inTargetMonth = isDateInMonth(date, year, month);
 
-        const temp = validRange(row.temp_drybulb_c_tttttt, -10, 50);
+        // In synoptic data, minimum temperature reported at 00 UTC belongs to the previous day.
+        const minimumTemp = firstValidRange(row, [
+            'temp_min_c_tntntn',
+            'Temp Min C Tntntn',
+            'temp_min_c_tn',
+            'temp_minimum_c_tn',
+            'temperature_min_c_tn',
+            'temperature_minimum_c_tn'
+        ], -10, 50);
+        if (hour === 0 && minimumTemp !== null) {
+            const targetDate = shiftDate(date, -1);
+            if (isDateInMonth(targetDate, year, month)) {
+                const targetDay = ensureDaily(daily, targetDate);
+                targetDay.tempMin = minimumTemp;
+                if (!tempMin || minimumTemp < tempMin.value) tempMin = { value: minimumTemp, date: targetDate };
+            }
+        }
+
+        // rainfall_24h_rrrr reported at 00 UTC is the previous day's total rainfall.
+        if (hour === 0) {
+            const targetDate = shiftDate(date, -1);
+            if (isDateInMonth(targetDate, year, month)) {
+                const targetDay = ensureDaily(daily, targetDate);
+                const rainfall = numberOrNull(fieldValue(row, ['rainfall_24h_rrrr', 'Rainfall 24h Rrrr']));
+                if (rainfall === 8888) {
+                    targetDay.rainfall = 0;
+                    targetDay.trace = true;
+                } else if (rainfall !== null && rainfall >= 0 && rainfall < 1000) {
+                    targetDay.rainfall = rainfall;
+                }
+            }
+        }
+
+        if (!inTargetMonth) continue;
+        observationCount++;
+        if (!lastTargetTimestamp || timestamp > lastTargetTimestamp) lastTargetTimestamp = timestamp;
+
+        const day = ensureDaily(daily, date);
+
+        const temp = validRange(fieldValue(row, ['temp_drybulb_c_tttttt', 'Temp Drybulb C Tttttt']), -10, 50);
         if (temp !== null) {
             temps.push(temp);
             day.temps.push(temp);
-            if (!tempMax || temp > tempMax.value) tempMax = { value: temp, date };
-            if (!tempMin || temp < tempMin.value) tempMin = { value: temp, date };
         }
 
-        const humidity = validRange(row.relative_humidity_pc, 0, 100);
+        // Maximum temperature reported at 12 UTC belongs to the same day.
+        const maximumTemp = firstValidRange(row, [
+            'temp_max_c_txtxtx',
+            'Temp Max C Txtxtx',
+            'temp_max_c_tx',
+            'temp_maximum_c_tx',
+            'temperature_max_c_tx',
+            'temperature_maximum_c_tx'
+        ], -10, 50);
+        if (hour === 12 && maximumTemp !== null) {
+            day.tempMax = maximumTemp;
+            if (!tempMax || maximumTemp > tempMax.value) tempMax = { value: maximumTemp, date };
+        }
+
+        const humidity = validRange(fieldValue(row, ['relative_humidity_pc', 'Relative Humidity Pc']), 0, 100);
         if (humidity !== null) humidities.push(humidity);
 
-        const speed = validRange(row.wind_speed_ff, 0, 150);
-        const direction = validRange(row.wind_dir_deg_dd, 0, 360);
+        const speed = validRange(fieldValue(row, ['wind_speed_ff', 'Wind Speed Ff']), 0, 150);
+        const direction = validRange(fieldValue(row, ['wind_dir_deg_dd', 'Wind Dir Deg Dd']), 0, 360);
         if (speed !== null) {
             winds.push(speed);
             if (!windMax || speed > windMax.value) windMax = { value: speed, date, direction };
@@ -207,22 +308,20 @@ function summarizeMonthly(rows, year, month) {
             }
         }
 
-        const category = weatherCategory(row.present_weather_ww);
+        const category = weatherCategory(fieldValue(row, ['present_weather_ww', 'Present Weather Ww']));
         if (category) weather.set(category, (weather.get(category) || 0) + 1);
-
-        // rainfall_24h_rrrr is read once per day at 00 UTC (07 WIB).
-        if (hour === 0) {
-            const rainfall = numberOrNull(row.rainfall_24h_rrrr);
-            if (rainfall === 8888) {
-                day.rainfall = 0;
-                day.trace = true;
-            } else if (rainfall !== null && rainfall >= 0 && rainfall < 1000) {
-                day.rainfall = rainfall;
-            }
-        }
     }
 
     if (!temps.length) throw new Error('Parameter suhu bulanan tidak tersedia');
+    if (!tempMin || !tempMax) {
+        for (const [date, day] of daily.entries()) {
+            if (!isDateInMonth(date, year, month) || !day.temps.length) continue;
+            const fallbackMin = Math.min(...day.temps);
+            const fallbackMax = Math.max(...day.temps);
+            if (!tempMin || fallbackMin < tempMin.value) tempMin = { value: fallbackMin, date };
+            if (!tempMax || fallbackMax > tempMax.value) tempMax = { value: fallbackMax, date };
+        }
+    }
     const dailyEntries = [...daily.entries()].sort(([a], [b]) => a.localeCompare(b));
     const rainDays = dailyEntries.filter(([, day]) => day.trace || (day.rainfall !== null && day.rainfall >= 0.1));
     const traceDays = dailyEntries.filter(([, day]) => day.trace);
@@ -237,7 +336,7 @@ function summarizeMonthly(rows, year, month) {
     const expected = isCurrentMonth
         ? ((now.getUTCDate() - 1) * 24 + now.getUTCHours() + 1)
         : daysInMonth(year, month) * 24;
-    const completeness = Math.min(100, rows.length / expected * 100);
+    const completeness = Math.min(100, observationCount / expected * 100);
     const activeDays = dailyEntries.filter(([, day]) => day.temps.length).length;
     const chartDays = Array.from({ length: daysInMonth(year, month) }, (_, index) => {
         const date = `${year}-${String(month).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`;
@@ -259,9 +358,9 @@ function summarizeMonthly(rows, year, month) {
     return {
         year, month, period: `${MONTHS[month - 1]} ${year}`,
         isCurrentMonth,
-        dataThrough: lastTimestamp ? lastTimestamp.slice(0, 10) : null,
+        dataThrough: lastTargetTimestamp ? lastTargetTimestamp.slice(0, 10) : lastTimestamp?.slice(0, 10) || null,
         station: STATION_NAME,
-        observationCount: rows.length,
+        observationCount,
         activeDays,
         completeness,
         temperature: { average: avg(temps), maximum: tempMax, minimum: tempMin },
