@@ -496,19 +496,8 @@ bot.on('callback_query', async (q) => {
                 caption: `🗓 *Kaleidoskop Cuaca Pangsuma — ${period}*\n\nDiolah dari ${result.summary.observationCount} pengamatan Sinoptik.`,
                 parse_mode: 'Markdown'
             });
-            await bot.sendDocument(
-                cid,
-                result.csv,
-                {
-                    caption: `CSV data Sinoptik BMKG Satu — Pangsuma (${period})`
-                },
-                {
-                    filename: result.csvFilename,
-                    contentType: 'text/csv'
-                }
-            );
             delete sessions[cid];
-            return bot.sendMessage(cid, '✅ Infografis dan CSV kaleidoskop selesai.', { ...backSubMenu('BMKGsatu') });
+            return bot.sendMessage(cid, '✅ Infografis kaleidoskop selesai.', { ...backSubMenu('BMKGsatu') });
         } catch (error) {
             console.error('KALEIDOSKOP ERR:', error.message);
             await bot.editMessageText(`❌ *Kaleidoskop gagal dibuat*\n\n${error.message}`, {

@@ -150,9 +150,7 @@ async function fetchMonthlyRows(year, month, username, password, onProgress = as
         { responseType: 'text', timeout: 60000 }
     );
     return {
-        rows: parseCsv(csv.data),
-        csvText: csv.data,
-        filename: `bmkgsatu_pangsuma_sinoptik_${year}_${String(month).padStart(2, '0')}.csv`
+        rows: parseCsv(csv.data)
     };
 }
 
@@ -244,7 +242,7 @@ function summarizeMonthly(rows, year, month) {
     const sectors = new Map(), weather = new Map(), daily = new Map();
     const visibilityFrequency = new Map();
     const windRoseBins = Array.from({ length: 8 }, () => [0, 0, 0, 0]);
-    let tempMax = null, tempMin = null, windMax = null, visibilityMin = null;
+    let tempMax = null, tempMin = null, windMax = null, visibilityMin = null, humidityMin = null;
     let lastTimestamp = null;
     let lastTargetTimestamp = null;
     let observationCount = 0;
@@ -317,7 +315,10 @@ function summarizeMonthly(rows, year, month) {
         }
 
         const humidity = validRange(fieldValue(row, ['relative_humidity_pc', 'Relative Humidity Pc']), 0, 100);
-        if (humidity !== null) humidities.push(humidity);
+        if (humidity !== null) {
+            humidities.push(humidity);
+            if (!humidityMin || humidity < humidityMin.value) humidityMin = { value: humidity, date };
+        }
 
         const visibility = validRange(fieldValue(row, ['visibility_vv', 'Visibility Vv']), 0, 100000);
         if (visibility !== null) {
@@ -412,7 +413,7 @@ function summarizeMonthly(rows, year, month) {
         activeDays,
         completeness,
         temperature: { average: avg(temps), maximum: tempMax, minimum: tempMin },
-        humidity: { average: avg(humidities) },
+        humidity: { average: avg(humidities), minimum: humidityMin },
         visibility: {
             average: avg(visibilities),
             dominant: dominantVisibility ? Number(dominantVisibility[0]) : null,
@@ -616,7 +617,10 @@ async function renderInfographic(summary) {
                 </div>
                 <div class="card group group-2">
                     <h2>💧 <span>Kelembapan</span></h2>
-                    <div class="metric-list single"><div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara bulanan</div></div></div>
+                    <div class="metric-list">
+                        <div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara bulanan</div></div>
+                        <div class="mini"><div class="label">Minimum</div><div class="value">${summary.humidity.minimum?.value.toFixed(0) || '–'}%</div><div class="detail">${summary.humidity.minimum ? formatDay(summary.humidity.minimum.date) : 'Tidak tersedia'}</div></div>
+                    </div>
                 </div>
                 <div class="card group group-2">
                     <h2>⛅ <span>Cuaca</span></h2>
@@ -660,9 +664,7 @@ async function generateMonthlyKaleidoscope(year, month, username, password, onPr
     const image = await renderInfographic(summary);
     return {
         image,
-        summary,
-        csv: Buffer.from(data.csvText, 'utf8'),
-        csvFilename: data.filename
+        summary
     };
 }
 
