@@ -399,7 +399,7 @@ function summarizeMonthly(rows, year, month) {
     const highlights = [];
     if (maxRain && maxRain.value >= 50) highlights.push(`Hujan tertinggi ${maxRain.value.toFixed(1)} mm terjadi pada ${formatDay(maxRain.date)}.`);
     if (rainDays.length) highlights.push(`Hujan tercatat pada ${rainDays.length} hari, termasuk ${traceDays.length} hari hujan tidak terukur.`);
-    if (visibilityMin) highlights.push(`Visibility terendah tercatat ${formatVisibility(visibilityMin.value)} pada ${formatDay(visibilityMin.date)}.`);
+    if (visibilityMin) highlights.push(`Jarak pandang terendah tercatat ${formatVisibility(visibilityMin.value)} pada ${formatDay(visibilityMin.date)}.`);
     if (windMax) highlights.push(`Angin terkuat mencapai ${windMax.value.toFixed(0)} knot pada ${formatDay(windMax.date)}.`);
     if (!highlights.length) highlights.push('Kondisi cuaca bulanan cenderung stabil berdasarkan pengamatan yang tersedia.');
 
@@ -448,37 +448,6 @@ function rainChart(days) {
     const labels = days.filter(day => day.day === 1 || day.day % 5 === 0 || day.day === days.length)
         .map(day => `<text x="${((day.day - 0.5) * barWidth).toFixed(1)}" y="165" text-anchor="middle" font-size="16" fill="#64748b">${day.day}</text>`).join('');
     return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="170"><line x1="0" y1="${base}" x2="${width}" y2="${base}" stroke="#cbd5e1"/>${bars}${labels}</svg>`;
-}
-
-function visibilityChart(days) {
-    const width = 930, height = 150, base = 122;
-    const values = days.map(day => day.visibility).filter(value => value !== null);
-    const max = Math.max(10, ...values);
-    const min = Math.min(...values, max);
-    const range = Math.max(1, max - min);
-    const step = width / Math.max(1, days.length - 1);
-    const points = days.map((day, index) => {
-        if (day.visibility === null) return null;
-        const y = base - ((day.visibility - min) / range * 95);
-        return { x: index * step, y, value: day.visibility };
-    });
-    const segments = [];
-    let current = [];
-    for (const point of points) {
-        if (point) current.push(`${point.x.toFixed(1)},${point.y.toFixed(1)}`);
-        else if (current.length) { segments.push(current); current = []; }
-    }
-    if (current.length) segments.push(current);
-    const labels = days.filter(day => day.day === 1 || day.day % 5 === 0 || day.day === days.length)
-        .map(day => `<text x="${((day.day - 1) * step).toFixed(1)}" y="148" text-anchor="middle" font-size="14" fill="#64748b">${day.day}</text>`).join('');
-    return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="150">
-        <line x1="0" y1="${base}" x2="${width}" y2="${base}" stroke="#cbd5e1"/>
-        <text x="0" y="16" font-size="13" fill="#64748b">${formatVisibility(max)}</text>
-        <text x="0" y="${base - 5}" font-size="13" fill="#64748b">${formatVisibility(min)}</text>
-        ${segments.map(segment => `<polyline points="${segment.join(' ')}" fill="none" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
-        ${points.filter(Boolean).map(point => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3.4" fill="#0284c7"/>`).join('')}
-        ${labels}
-    </svg>`;
 }
 
 function temperatureChart(days) {
@@ -587,48 +556,74 @@ async function renderInfographic(summary) {
     const tempMax = summary.temperature.maximum;
     const tempMin = summary.temperature.minimum;
     const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-        *{box-sizing:border-box} body{margin:0;width:1080px;height:1760px;font-family:Arial,sans-serif;background:#eaf4fb;color:#0f172a}
-        .page{position:relative;width:1080px;height:1760px;background:linear-gradient(180deg,#f8fcff,#e9f5ff);overflow:hidden}
-        header{position:relative;height:195px;padding:25px 48px;color:white;background:linear-gradient(90deg,#082f49 0%,#075985 42%,#0ea5e9 76%,#38bdf8 100%);display:flex;align-items:center;justify-content:space-between;gap:25px;overflow:hidden}
+        *{box-sizing:border-box} body{margin:0;width:1080px;height:1270px;font-family:Arial,sans-serif;background:#eaf4fb;color:#0f172a}
+        .page{position:relative;width:1080px;height:1270px;background:linear-gradient(180deg,#f8fcff,#e9f5ff);overflow:hidden}
+        header{position:relative;height:178px;padding:21px 48px;color:white;background:linear-gradient(90deg,#082f49 0%,#075985 42%,#0ea5e9 76%,#38bdf8 100%);display:flex;align-items:center;justify-content:space-between;gap:25px;overflow:hidden}
         header:before{content:"";position:absolute;width:470px;height:470px;border:2px solid rgba(255,255,255,.12);border-radius:50%;right:-155px;top:-210px;box-shadow:0 0 0 45px rgba(255,255,255,.035),0 0 0 100px rgba(255,255,255,.025)}
         header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,#22c55e 0 30%,#facc15 30% 39%,#38bdf8 39% 100%)}
         .header-copy{position:relative;z-index:2;min-width:0;flex:1}.header-brand{position:relative;z-index:2;width:180px;height:145px;display:flex;align-items:center;justify-content:center}
-        .brand-logo{width:112px;height:130px;object-fit:contain;object-position:center;filter:drop-shadow(0 7px 12px rgba(0,0,0,.22))}
-        .eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:8px;font-size:14px;font-weight:800;letter-spacing:2.2px;color:#bae6fd}.eyebrow:before{content:"";width:34px;height:3px;border-radius:5px;background:#38bdf8}
-        h1{font-size:45px;margin:0 0 7px;letter-spacing:1px}.subtitle{font-size:24px;opacity:.95}.source{font-size:16px;margin-top:9px;color:#dbeafe}
-        main{padding:24px 42px 114px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:white;border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(15,60,90,.09);border:1px solid #dbeafe}
-        .metric{min-height:138px}.label{font-size:17px;color:#475569;font-weight:700}.value{font-size:34px;font-weight:800;margin:9px 0 5px;color:#075985}.detail{font-size:15px;color:#64748b;line-height:1.35}
-        .wide{grid-column:span 2}.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.chart{height:245px}.chart h2,.highlights h2,.rain-class h2{font-size:21px;margin:0 0 3px}.chart small,.rain-class small{color:#64748b}
-        .chart-wide{grid-column:span 2;height:225px}
-        .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.highlights,.rain-class{padding:20px 24px}.highlights ul{margin:9px 0 0;padding-left:22px}.highlights li{font-size:17px;line-height:1.36;margin:3px 0}
-        .rain-events{margin-top:10px;display:grid;gap:7px}.rain-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:8px 11px;border-radius:12px;background:#eff6ff;font-size:15px;color:#475569}.rain-row strong{max-width:210px;text-align:right;color:#075985;font-size:16px}
-        .lower-third{position:absolute;left:0;right:0;bottom:0;height:94px;color:white;background:linear-gradient(100deg,#082f49 0%,#075985 62%,#0284c7 62%,#0ea5e9 100%);display:flex;align-items:center;justify-content:space-between;padding:0 46px;box-shadow:0 -8px 25px rgba(8,47,73,.16)}
+        .brand-logo{width:100px;height:118px;object-fit:contain;object-position:center;filter:drop-shadow(0 7px 12px rgba(0,0,0,.22))}
+        .eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:6px;font-size:13px;font-weight:800;letter-spacing:2.1px;color:#bae6fd}.eyebrow:before{content:"";width:34px;height:3px;border-radius:5px;background:#38bdf8}
+        h1{font-size:42px;margin:0 0 5px;letter-spacing:1px}.subtitle{font-size:23px;opacity:.95}.source{font-size:15px;margin-top:7px;color:#dbeafe}
+        main{padding:16px 42px 106px}.group-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.card{background:white;border-radius:17px;padding:14px;box-shadow:0 8px 24px rgba(15,60,90,.09);border:1px solid #dbeafe}
+        .group{min-height:144px;padding:12px 15px}.section-title,.group h2,.chart h2,.highlights h2,.rain-class h2{margin:0 0 9px;font-size:20px;font-weight:800;line-height:1.15;color:#020617;letter-spacing:0}.group h2{display:flex;align-items:center;gap:7px}.group h2 span{font:inherit;color:inherit;text-transform:none}
+        .group-2{grid-column:span 2}.metric-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric-list.single{grid-template-columns:1fr}.mini{min-height:70px;border-radius:13px;padding:9px 12px;background:#f8fbff;border:1px solid #e0f2fe}
+        .label{font-size:13px;line-height:1.15;color:#334155;font-weight:700}.value{font-size:26px;line-height:1.05;font-weight:800;margin:5px 0 3px;color:#075985;letter-spacing:.1px}.detail{font-size:12px;font-weight:400;color:#64748b;line-height:1.25}
+        .wide{grid-column:span 2}.charts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.chart{height:235px}.chart small,.rain-class small{display:block;margin-top:-5px;margin-bottom:8px;font-size:12px;font-weight:400;line-height:1.25;color:#64748b}
+        .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}.highlights,.rain-class{padding:12px 24px}.highlights ul{margin:5px 0 0;padding-left:20px}.highlights li{font-size:15px;line-height:1.2;margin:1px 0}
+        .rain-events{margin-top:7px;display:grid;gap:5px}.rain-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:6px 10px;border-radius:10px;background:#eff6ff;font-size:13px;font-weight:400;color:#475569;line-height:1.2}.rain-row strong{max-width:240px;text-align:right;color:#075985;font-size:13px;font-weight:800}
+        .lower-third{position:absolute;left:0;right:0;bottom:0;height:82px;color:white;background:linear-gradient(100deg,#082f49 0%,#075985 62%,#0284c7 62%,#0ea5e9 100%);display:flex;align-items:center;justify-content:space-between;padding:0 46px;box-shadow:0 -8px 25px rgba(8,47,73,.16)}
         .lower-third:before{content:"";position:absolute;top:0;left:0;width:100%;height:5px;background:linear-gradient(90deg,#22c55e 0 33%,#facc15 33% 44%,#38bdf8 44% 100%)}
-        .lt-identity{display:flex;align-items:center;gap:15px}.lt-mark{width:7px;height:48px;border-radius:8px;background:#38bdf8}.lt-title{font-size:21px;font-weight:800;letter-spacing:.3px}.lt-subtitle{margin-top:5px;font-size:15px;color:#bae6fd}
-        .lt-meta{text-align:right}.lt-period{font-size:18px;font-weight:800}.lt-status{display:inline-block;margin-top:7px;padding:5px 12px;border-radius:99px;background:rgba(220,252,231,.95);color:#166534;font-size:14px;font-weight:800}
-        .trace{font-size:13px;color:#0369a1;margin-top:6px}
+        .lt-identity{display:flex;align-items:center;gap:15px}.lt-mark{width:7px;height:44px;border-radius:8px;background:#38bdf8}.lt-title{font-size:20px;font-weight:800;letter-spacing:.3px}.lt-subtitle{margin-top:4px;font-size:14px;color:#bae6fd}
+        .lt-meta{text-align:right}.lt-period{font-size:17px;font-weight:800}.lt-status{display:inline-block;margin-top:6px;padding:5px 12px;border-radius:99px;background:rgba(220,252,231,.95);color:#166534;font-size:13px;font-weight:800}
+        .trace{font-size:11px;color:#0369a1;margin-top:3px}
     </style></head><body><div class="page">
         <header>
             <div class="header-copy"><div class="eyebrow">INFORMASI CUACA TERAMATI</div><h1>KALEIDOSKOP CUACA</h1><div class="subtitle">Pangsuma • ${escapeHtml(summary.period)}${summary.isCurrentMonth && summary.dataThrough ? ` • data s.d. ${formatDay(summary.dataThrough)}` : ''}</div><div class="source">Diolah dari pengamatan Sinoptik BMKG Satu</div></div>
             <div class="header-brand">${logo ? `<img class="brand-logo" src="data:image/png;base64,${logo}">` : ''}</div>
         </header>
         <main>
-            <section class="grid">
-                <div class="card metric"><div class="label">🌡️ Suhu Rata-rata</div><div class="value">${summary.temperature.average.toFixed(1)}°C</div><div class="detail">${tempMin.value.toFixed(1)}°C – ${tempMax.value.toFixed(1)}°C</div></div>
-                <div class="card metric"><div class="label">🔥 Suhu Tertinggi</div><div class="value">${tempMax.value.toFixed(1)}°C</div><div class="detail">${formatDay(tempMax.date)}</div></div>
-                <div class="card metric"><div class="label">🌧️ Total Curah Hujan</div><div class="value">${summary.rainfall.total.toFixed(1)} mm</div><div class="detail">${summary.rainfall.rainyDays} hari hujan</div><div class="trace">${summary.rainfall.traceDays} hari hujan tidak terukur (&lt;0,1 mm)</div></div>
-                <div class="card metric"><div class="label">☔ Hujan Tertinggi</div><div class="value">${rainMax ? `${rainMax.value.toFixed(1)} mm` : '–'}</div><div class="detail">${rainMax ? formatDay(rainMax.date) : 'Tidak tersedia'}</div></div>
-                <div class="card metric"><div class="label">💧 Kelembapan Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara bulanan</div></div>
-                <div class="card metric"><div class="label">🧭 Angin Dominan</div><div class="value" style="font-size:30px">${escapeHtml(summary.wind.dominant)}</div><div class="detail">Berdasarkan frekuensi arah angin</div></div>
-                <div class="card metric"><div class="label">💨 Angin Terkuat</div><div class="value">${summary.wind.maximum?.value.toFixed(0) || '–'} kt</div><div class="detail">${summary.wind.maximum ? formatDay(summary.wind.maximum.date) : 'Tidak tersedia'}</div></div>
-                <div class="card metric"><div class="label">👁️ Visibility Dominan</div><div class="value" style="font-size:30px">${formatVisibility(summary.visibility.dominant)}</div><div class="detail">${summary.visibility.dominantCount} kali tercatat</div></div>
-                <div class="card metric"><div class="label">⛅ Cuaca Dominan</div><div class="value" style="font-size:27px">${escapeHtml(summary.dominantWeather)}</div><div class="detail">Kondisi yang paling sering tercatat</div></div>
-                <div class="card metric"><div class="label">🌫️ Visibility Terendah</div><div class="value" style="font-size:30px">${formatVisibility(summary.visibility.minimum?.value)}</div><div class="detail">${summary.visibility.minimum ? formatDay(summary.visibility.minimum.date) : 'Tidak tersedia'}</div></div>
+            <section class="group-grid">
+                <div class="card group group-2">
+                    <h2>🌡️ <span>Suhu</span></h2>
+                    <div class="metric-list">
+                        <div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.temperature.average.toFixed(1)}°C</div><div class="detail">${tempMin.value.toFixed(1)}°C – ${tempMax.value.toFixed(1)}°C</div></div>
+                        <div class="mini"><div class="label">Tertinggi</div><div class="value">${tempMax.value.toFixed(1)}°C</div><div class="detail">${formatDay(tempMax.date)}</div></div>
+                    </div>
+                </div>
+                <div class="card group group-2">
+                    <h2>🌧️ <span>Hujan</span></h2>
+                    <div class="metric-list">
+                        <div class="mini"><div class="label">Total Bulanan</div><div class="value">${summary.rainfall.total.toFixed(1)} mm</div><div class="detail">${summary.rainfall.rainyDays} hari hujan</div></div>
+                        <div class="mini"><div class="label">Harian Tertinggi</div><div class="value">${rainMax ? `${rainMax.value.toFixed(1)} mm` : '–'}</div><div class="detail">${rainMax ? formatDay(rainMax.date) : 'Tidak tersedia'}</div></div>
+                    </div>
+                </div>
+                <div class="card group group-2">
+                    <h2>💨 <span>Angin</span></h2>
+                    <div class="metric-list">
+                        <div class="mini"><div class="label">Dominan</div><div class="value">${escapeHtml(summary.wind.dominant)}</div><div class="detail">Berdasarkan frekuensi arah</div></div>
+                        <div class="mini"><div class="label">Terkuat</div><div class="value">${summary.wind.maximum?.value.toFixed(0) || '–'} kt</div><div class="detail">${summary.wind.maximum ? formatDay(summary.wind.maximum.date) : 'Tidak tersedia'}</div></div>
+                    </div>
+                </div>
+                <div class="card group group-2">
+                    <h2>🌫️ <span>Jarak Pandang</span></h2>
+                    <div class="metric-list">
+                        <div class="mini"><div class="label">Dominan</div><div class="value">${formatVisibility(summary.visibility.dominant)}</div><div class="detail">${summary.visibility.dominantCount} kali tercatat</div></div>
+                        <div class="mini"><div class="label">Terendah</div><div class="value">${formatVisibility(summary.visibility.minimum?.value)}</div><div class="detail">${summary.visibility.minimum ? formatDay(summary.visibility.minimum.date) : 'Tidak tersedia'}</div></div>
+                    </div>
+                </div>
+                <div class="card group group-2">
+                    <h2>💧 <span>Kelembapan</span></h2>
+                    <div class="metric-list single"><div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara bulanan</div></div></div>
+                </div>
+                <div class="card group group-2">
+                    <h2>⛅ <span>Cuaca</span></h2>
+                    <div class="metric-list single"><div class="mini"><div class="label">Dominan</div><div class="value">${escapeHtml(summary.dominantWeather)}</div><div class="detail">Kondisi yang paling sering tercatat</div></div></div>
+                </div>
             </section>
             <section class="charts">
                 <div class="card chart"><h2>Curah Hujan Harian</h2><small>milimeter per hari</small>${rainChart(summary.chartDays)}</div>
                 <div class="card chart"><h2>Windrose Bulanan</h2><small>frekuensi arah dan kelas kecepatan angin</small>${windRoseChart(summary.wind.rose)}</div>
-                <div class="card chart chart-wide"><h2>Visibility Minimum Harian</h2><small>nilai visibility terendah tiap hari</small>${visibilityChart(summary.chartDays)}</div>
             </section>
             <section class="bottom-grid">
                 <div class="card rain-class"><h2>Kejadian Hujan per Kriteria</h2><small>tanggal kejadian berdasarkan curah hujan harian BMKG</small>${rainEventList(summary.rainfall.events)}</div>
@@ -647,7 +642,7 @@ async function renderInfographic(summary) {
         html,
         puppeteerArgs: {
             executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1080,1760']
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1080,1270']
         }
     });
     const buffer = fs.readFileSync(output);
