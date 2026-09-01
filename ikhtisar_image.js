@@ -265,12 +265,12 @@ function buildHtml(summary) {
     z-index: 1;
     height: 100%;
     display: grid;
-    grid-template-columns: 310px 1fr;
+    grid-template-columns: 330px 1fr;
     gap: 76px;
     align-items: center;
   }
   .logo-panel {
-    width: 286px;
+    width: 310px;
     height: 310px;
     border-radius: 58px;
     background: rgba(255,255,255,.97);
