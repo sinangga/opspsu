@@ -2,8 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const nodeHtmlToImage = require('node-html-to-image');
 
-const OUTPUT_WIDTH = 2160;
-const OUTPUT_HEIGHT = 2700;
+const DESIGN_WIDTH = 2160;
+const DESIGN_HEIGHT = 2700;
+const OUTPUT_SCALE = 2;
+const OUTPUT_WIDTH = DESIGN_WIDTH * OUTPUT_SCALE;
+const OUTPUT_HEIGHT = DESIGN_HEIGHT * OUTPUT_SCALE;
 
 function assetDataUri(...segments) {
     const filePath = path.join(__dirname, ...segments);
@@ -219,8 +222,10 @@ function buildHtml(summary) {
   }
   .poster {
     position: relative;
-    width: ${OUTPUT_WIDTH}px;
-    height: ${OUTPUT_HEIGHT}px;
+    width: ${DESIGN_WIDTH}px;
+    height: ${DESIGN_HEIGHT}px;
+    transform: scale(${OUTPUT_SCALE});
+    transform-origin: top left;
     overflow: hidden;
     background:
       linear-gradient(180deg, #f8fdff 0%, #edf7fb 53%, #e4f1f7 100%);

@@ -222,18 +222,19 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
         const rows = lines.slice(1).map(l => l.split(d));
         const getI = (n) => h.indexOf(n);
-        const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
+        const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), tMinI = getI('temperature_min_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
         
-        let tS=0,tC=0,tX=-999,tN=999,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
+        let tS=0,tC=0,tX=-999,tNAvg=999,tNDaily=999,tMinDailyCount=0,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
         const sectors = ["N","NE","E","SE","S","SW","W","NW"];
         const sectorFreqs = new Array(8).fill(0);
 
         rows.forEach(r => {
             const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
-            const tv=cl(r[tI]),txv=cl(r[tMaxI]),hv=cl(r[hI]),wv=cl(r[wsI]),rv=cl(r[rI]);
-            if (!isNaN(tv)) { tS+=tv; tC++; tN=Math.min(tN,tv); }
+            const tv=cl(r[tI]),txv=cl(r[tMaxI]),tnv=cl(r[tMinI]),hv=cl(r[hI]),wv=cl(r[wsI]),rv=cl(r[rI]);
+            if (!isNaN(tv)) { tS+=tv; tC++; tNAvg=Math.min(tNAvg,tv); }
             if (!isNaN(txv)) tX=Math.max(tX,txv);
             else if (!isNaN(tv)) tX=Math.max(tX,tv);
+            if (!isNaN(tnv)) { tNDaily=tnv; tMinDailyCount++; }
             if (!isNaN(hv)) { hS+=hv; hC++; hX=Math.max(hX,hv); hN=Math.min(hN,hv); }
             if (!isNaN(wv)) wsX=Math.max(wsX,wv);
             
@@ -247,6 +248,8 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
             if (new Date(r[0]*1000).getUTCMinutes() === 59 && !isNaN(rv)) rain+=rv;
         });
         if (tC===0) return { report: "❌ *ERROR:* Data file is empty or corrupted." };
+
+        const tN = tMinDailyCount > 0 ? tNDaily : tNAvg;
         
         const domIdx = sectorFreqs.indexOf(Math.max(...sectorFreqs));
         const dom = sectorFreqs[domIdx] > 0 ? `${sectors[domIdx]} (${(domIdx * 45).toFixed(0)}°)` : "-";
