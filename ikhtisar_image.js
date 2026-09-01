@@ -218,7 +218,7 @@ function buildHtml(summary) {
   body {
     font-family: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
     color: #0b2238;
-    background: #edf7fb;
+    background: #f5f1e8;
   }
   .poster {
     position: relative;
@@ -228,7 +228,7 @@ function buildHtml(summary) {
     transform-origin: top left;
     overflow: hidden;
     background:
-      linear-gradient(180deg, #f8fdff 0%, #edf7fb 53%, #e4f1f7 100%);
+      linear-gradient(180deg, #fffaf0 0%, #f5f1e8 53%, #e8edf0 100%);
   }
   .hero {
     position: relative;
@@ -237,9 +237,9 @@ function buildHtml(summary) {
     color: #ffffff;
     overflow: hidden;
     background:
-      radial-gradient(circle at 82% 18%, rgba(255,210,66,.28) 0 230px, transparent 236px),
-      radial-gradient(circle at 12% 82%, rgba(57,196,131,.28) 0 230px, transparent 236px),
-      linear-gradient(135deg, #0b5fa8 0%, #0797c8 52%, #42d6c4 100%);
+      radial-gradient(circle at 82% 18%, rgba(255,214,73,.42) 0 230px, transparent 236px),
+      radial-gradient(circle at 12% 82%, rgba(86,151,165,.3) 0 230px, transparent 236px),
+      linear-gradient(135deg, #183b58 0%, #b64e2e 52%, #e7a72d 100%);
   }
   .hero::before {
     content: "";
@@ -250,7 +250,7 @@ function buildHtml(summary) {
     height: 1050px;
     border-radius: 999px;
     border: 70px solid rgba(255,255,255,.2);
-    box-shadow: inset 0 0 0 78px rgba(7,67,119,.14);
+    box-shadow: inset 0 0 0 78px rgba(89,38,28,.16);
   }
   .hero::after {
     content: "";
@@ -280,7 +280,7 @@ function buildHtml(summary) {
     box-shadow: 0 36px 80px rgba(4,44,82,.28);
   }
   .logo-panel img { width: 260px; height: 260px; object-fit: contain; display: block; }
-  .logo-panel b { font-size: 64px; color: #0b5fa8; }
+  .logo-panel b { font-size: 64px; color: #a9422a; }
   .kicker {
     display: inline-flex;
     width: fit-content;
@@ -323,7 +323,7 @@ function buildHtml(summary) {
     justify-content: center;
     border-radius: 28px;
     background: #ffffff;
-    color: #0b5fa8;
+    color: #a9422a;
     font-size: 56px;
     font-weight: 950;
     box-shadow: 0 18px 38px rgba(4,44,82,.18);
@@ -344,7 +344,7 @@ function buildHtml(summary) {
   }
   .summary-band p {
     margin: 0 0 14px;
-    color: #97dff0;
+    color: #f5cf63;
     font-size: 34px;
     font-weight: 900;
     letter-spacing: 1px;
@@ -380,11 +380,11 @@ function buildHtml(summary) {
     bottom: 0;
     width: 18px;
   }
-  .accent-orange::before { background: #ffad2f; }
-  .accent-cyan::before { background: #18a7d7; }
-  .accent-green::before { background: #2bbd73; }
-  .accent-blue::before { background: #4c8fe8; }
-  .accent-yellow::before { background: #ffd13d; }
+  .accent-orange::before { background: #e8792f; }
+  .accent-cyan::before { background: #3d9db5; }
+  .accent-green::before { background: #7aa34f; }
+  .accent-blue::before { background: #517fa3; }
+  .accent-yellow::before { background: #f2b52c; }
   .temperature-card {
     grid-column: 1 / -1;
     min-height: 480px;
@@ -400,7 +400,7 @@ function buildHtml(summary) {
     width: 150px;
     height: 150px;
     border-radius: 34px;
-    background: #eef8fb;
+    background: #fff5e5;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -478,14 +478,14 @@ function buildHtml(summary) {
     right: 0;
     bottom: 0;
     height: 142px;
-    background: #ffffff;
-    border-top: 12px solid #0b72b7;
+    background: #fffdf8;
+    border-top: 12px solid #b64e2e;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     align-items: center;
     gap: 26px;
     padding: 0 126px;
-    color: #1169a6;
+    color: #a9422a;
     font-size: 38px;
     font-weight: 900;
     box-shadow: 0 -24px 58px rgba(3,43,78,.12);
@@ -503,7 +503,7 @@ function buildHtml(summary) {
     height: 40px;
     flex: 0 0 auto;
     fill: none;
-    stroke: #26a967;
+    stroke: #6e9b57;
     stroke-width: 3.6;
     stroke-linecap: round;
     stroke-linejoin: round;
