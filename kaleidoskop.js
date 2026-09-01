@@ -189,6 +189,74 @@ async function fetchDailyVisibilityRange(dateStr, username, password, onProgress
     };
 }
 
+async function fetchDailyWeatherSummary(dateStr, username, password, onProgress = async () => {}) {
+    const data = await fetchRowsByRange(observationRange(dateStr, dateStr), username, password, onProgress, 'cuaca harian');
+    const visibilities = [];
+    const weather = new Map();
+
+    for (const row of data.rows) {
+        const timestamp = fieldValue(row, ['data_timestamp', 'Data Timestamp'])?.replace(' ', 'T');
+        if (!timestamp || timestamp.slice(0, 10) !== dateStr) continue;
+
+        const visibility = validRange(fieldValue(row, ['visibility_vv', 'Visibility Vv']), 0, 100000);
+        if (visibility !== null) visibilities.push(visibility);
+
+        const category = weatherCategory(fieldValue(row, ['present_weather_ww', 'Present Weather Ww']));
+        if (category) weather.set(category, (weather.get(category) || 0) + 1);
+    }
+
+    const dominantWeather = [...weather.entries()].sort((a, b) => b[1] - a[1])[0];
+    return {
+        visibility: visibilities.length
+            ? {
+                minimum: Math.min(...visibilities),
+                maximum: Math.max(...visibilities),
+                count: visibilities.length
+            }
+            : { minimum: null, maximum: null, count: 0 },
+        weather: {
+            dominant: dominantWeather?.[0] || 'Tidak tersedia',
+            count: dominantWeather?.[1] || 0,
+            observationCount: [...weather.values()].reduce((sum, count) => sum + count, 0),
+            distribution: Object.fromEntries(weather)
+        }
+    };
+}
+
+function buildWeatherNarrative(weather = {}) {
+    const dominant = String(weather.dominant || '').trim().replace(/^Cerah.*Berawan$/, 'Cerah-Berawan');
+    const observationCount = Number(weather.observationCount) || 0;
+    const dominantCount = Number(weather.count) || 0;
+    if (!dominant || dominant === 'Tidak tersedia' || observationCount === 0) {
+        return 'Data cuaca harian belum tersedia.';
+    }
+
+    const dominantText = /udara kabur|kabut\/asap/i.test(dominant)
+        ? 'udara kabur (kabut asap)'
+        : dominant.toLowerCase();
+    const otherCount = Math.max(0, observationCount - dominantCount);
+    if (otherCount === 0) {
+        return `Sepanjang hari, kondisi ${dominantText} mendominasi seluruh pengamatan.`;
+    }
+
+    const distribution = weather.distribution || {};
+    const otherConditions = Object.entries(distribution)
+        .filter(([category, count]) => category !== dominant && Number(count) > 0)
+        .sort((a, b) => Number(b[1]) - Number(a[1]))
+        .map(([category]) => /udara kabur|kabut\/asap/i.test(category)
+            ? 'udara kabur (kabut asap)'
+            : category.toLowerCase());
+    const uniqueConditions = [...new Set(otherConditions)];
+    if (uniqueConditions.length === 1) {
+        return `Cuaca didominasi ${dominantText}, dengan kondisi lain berupa ${uniqueConditions[0]}.`;
+    }
+    if (uniqueConditions.length > 1) {
+        return `Cuaca didominasi ${dominantText}, dengan kondisi lain berupa ${uniqueConditions.join(', ')}.`;
+    }
+
+    return `Cuaca didominasi ${dominantText}, dengan kondisi lain tercatat pada ${otherCount} pengamatan.`;
+}
+
 function weatherCategory(code) {
     const value = numberOrNull(code);
     if (value === null) return null;
@@ -747,6 +815,8 @@ module.exports = {
     parseCsv,
     formatVisibility,
     fetchDailyVisibilityRange,
+    fetchDailyWeatherSummary,
+    buildWeatherNarrative,
     summarizeMonthly,
     generateMonthlyKaleidoscope,
     generateWeeklyKaleidoscope

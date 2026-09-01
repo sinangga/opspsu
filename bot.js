@@ -7,7 +7,8 @@ const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
 const { generatePrakiraanImages } = require('./prakiraan');
-const { MONTHS: KALEIDOSKOP_MONTHS, formatVisibility, fetchDailyVisibilityRange, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
+const { generateIkhtisarImage } = require('./ikhtisar_image');
+const { MONTHS: KALEIDOSKOP_MONTHS, formatVisibility, fetchDailyWeatherSummary, buildWeatherNarrative, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
 const kecamatanMap = require('./DashboardNextJS/kecamatan_map.json');
 
 // ================= CONFIG =================
@@ -251,21 +252,64 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         const dom = sectorFreqs[domIdx] > 0 ? `${sectors[domIdx]} (${(domIdx * 45).toFixed(0)}°)` : "-";
 
         if (loaderMsgId) await bot.editMessageText(`⏳ *[3/4] BMKG Satu:* Fetching visibility range...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
-        let visibilityRange = null;
+        let dailyWeather = null;
         try {
-            visibilityRange = await fetchDailyVisibilityRange(dateStr, BMKGSATU_USER, BMKGSATU_PASS);
+            dailyWeather = await fetchDailyWeatherSummary(dateStr, BMKGSATU_USER, BMKGSATU_PASS);
         } catch (visibilityError) {
             console.error('IKHTISAR VISIBILITY ERR:', visibilityError.message);
         }
+        const visibilityRange = dailyWeather?.visibility || null;
         
         if (loaderMsgId) await bot.editMessageText(`⏳ *[4/4] Finalizing:* Formatting daily report...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
 
         const visibilityText = visibilityRange && visibilityRange.count > 0
             ? `\n\n👁 *JARAK PANDANG (BMKG Satu)*\n- 🔺 Max: *${formatVisibility(visibilityRange.maximum)}*\n- 🔻 Min: *${formatVisibility(visibilityRange.minimum)}*\n- 🧾 Data: *${visibilityRange.count} observasi*`
             : `\n\n👁 *JARAK PANDANG (BMKG Satu)*\n- Data: *Tidak tersedia*`;
+        const visibilityKmValue = (value) => {
+            if (value === null || value === undefined) return '-';
+            const km = value <= 100 ? value : value / 1000;
+            return km.toFixed(km >= 10 ? 0 : 1).replace(/\.0$/, '');
+        };
+        const visibilityRangeText = visibilityRange && visibilityRange.count > 0
+            ? `${visibilityKmValue(visibilityRange.minimum)} - ${visibilityKmValue(visibilityRange.maximum)}`
+            : '-';
+        const summary = {
+            dateStr,
+            temperature: {
+                max: tX.toFixed(1),
+                min: tN.toFixed(1),
+                avg: (tS / tC).toFixed(1)
+            },
+            humidity: {
+                max: Math.round(hX),
+                min: Math.round(hN),
+                avg: Math.round(hS / hC)
+            },
+            wind: {
+                maxMs: wsX.toFixed(1),
+                maxKt: (wsX * 1.94).toFixed(1),
+                dominant: dom
+            },
+            visibility: {
+                min: visibilityRange?.minimum ?? null,
+                max: visibilityRange?.maximum ?? null,
+                count: visibilityRange?.count ?? 0,
+                rangeText: visibilityRangeText
+            },
+            weather: {
+                dominant: dailyWeather?.weather?.dominant || 'Tidak tersedia',
+                count: dailyWeather?.weather?.count || 0,
+                observationCount: dailyWeather?.weather?.observationCount || 0,
+                distribution: dailyWeather?.weather?.distribution || {},
+                narrative: buildWeatherNarrative(dailyWeather?.weather)
+            },
+            rainfall: {
+                total: rain.toFixed(1)
+            }
+        };
         
         let rep = `📊 *IKHTISAR HARIAN - ${dateStr}*\n\n🌡 *TEMPERATUR*\n- 🔺 Max: *${tX.toFixed(1)}°C*\n- 🔻 Min: *${tN.toFixed(1)}°C*\n- ⚖️ Avg: *${(tS/tC).toFixed(1)}°C*\n\n💧 *KELEMBAPAN (RH)*\n- 🔺 Max: *${Math.round(hX)}%*\n- 🔻 Min: *${Math.round(hN)}%*\n- ⚖️ Avg: *${Math.round(hS/hC)}%*\n\n💨 *ANGIN*\n- ⚡ Max: *${wsX.toFixed(1)} m/s* (${(wsX*1.94).toFixed(1)} KT)\n- 🧭 Dominan: *${dom}*${visibilityText}\n\n🌧 *HUJAN 24 JAM*\n- ☔ Total: *${rain.toFixed(1)} mm*`;
-        return { report: rep, rawData: res.data };
+        return { report: rep, rawData: res.data, summary };
     } catch (e) { return { report: "❌ *ERROR:* " + e.message }; }
 }
 
@@ -534,9 +578,17 @@ async function sendKaleidoskopResult(cid, period, generator) {
         return;
     }
 }
-function ikhtisarDateMenu() { 
+function ikhtisarFormatMenu() {
+    return {
+        reply_markup: {
+            keyboard: [['📝 Teks', '🖼 Infografis'], ['🏠 Back to Home']],
+            resize_keyboard: true
+        }
+    };
+}
+function ikhtisarDateMenu() {
     const t = new Date().toISOString().split('T')[0], y = new Date(Date.now()-86400000).toISOString().split('T')[0];
-    return { reply_markup: { keyboard: [[`Hari Ini (${t})`], [`Kemarin (${y})`], ['📅 Open Calendar'], ['🏠 Back to Home']], resize_keyboard: true } };
+    return { reply_markup: { keyboard: [[`Hari Ini (${t})`], [`Kemarin (${y})`], ['📅 Open Calendar'], ['🔙 Back to IKHTISAR MENU'], ['🏠 Back to Home']], resize_keyboard: true } };
 }
 function backSubMenu(cat) { return { reply_markup: { keyboard: [[`🔙 Back to ${cat.toUpperCase()} MENU`], ['🏠 Back to Home']], resize_keyboard: true } }; }
 function kaleidoskopBackMenu() { return backSubMenu('Kaleidoskop'); }
@@ -637,9 +689,17 @@ bot.on('callback_query', async (q) => {
         const dStr = data.substring(8), mode = (sessions[cid] || {}).mode || 'ikhtisar_date';
         bot.answerCallbackQuery(q.id); bot.deleteMessage(cid, q.message.message_id);
         const ldr = await bot.sendMessage(cid, `⏳ *Memproses data untuk ${dStr}...*`, { parse_mode: 'Markdown' });
-        if (mode === 'ikhtisar_date') {
+        if (mode === 'ikhtisar_date' || mode === 'ikhtisar_image_date') {
             const res = await generateIkhtisar(dStr, cid, ldr.message_id);
-            if (res.report) { await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); }
+            if (mode === 'ikhtisar_image_date' && res.summary) {
+                await bot.editMessageText(`⏳ *[Final] Rendering gambar IG...*`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' }).catch(() => {});
+                const image = await generateIkhtisarImage(res.summary);
+                await bot.sendPhoto(cid, image, { caption: `📈 *Ikhtisar Cuaca IG - ${dStr}*`, parse_mode: 'Markdown' });
+                bot.sendMessage(cid, '✅ *Gambar Ikhtisar IG selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') });
+            } else if (res.report) {
+                await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' });
+                bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') });
+            }
         } else {
             if (!isAuthenticated(cid)) {
                 bot.deleteMessage(cid, ldr.message_id).catch(() => {});
@@ -726,7 +786,18 @@ bot.on('message', async (msg) => {
 
     // Navigation
     if (text === '✈️ METAR MENU' || text === '🔙 Back to METAR MENU') return bot.sendMessage(cid, '✈️ *METAR MENU*', { parse_mode: 'Markdown', ...metarMenu() });
-    if (text === '📈 IKHTISAR MENU' || text === '🔙 Back to IKHTISAR MENU') return bot.sendMessage(cid, '📈 *IKHTISAR MENU*', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
+    if (text === '📈 IKHTISAR MENU' || text === '🔙 Back to IKHTISAR MENU') {
+        delete sessions[cid];
+        return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih format laporan:', { parse_mode: 'Markdown', ...ikhtisarFormatMenu() });
+    }
+    if (text === '📝 Teks') {
+        sessions[cid] = { mode: 'ikhtisar_date' };
+        return bot.sendMessage(cid, '📝 *IKHTISAR TEKS*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
+    }
+    if (text === '🖼 Infografis') {
+        sessions[cid] = { mode: 'ikhtisar_image_date' };
+        return bot.sendMessage(cid, '🖼 *IKHTISAR INFOGRAFIS*\nPilih tanggal untuk dibuat gambar Instagram.', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
+    }
     if (text === '🔙 Back to GRAPH MENU') {
         if (!isAuth) {
             sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
@@ -742,7 +813,10 @@ bot.on('message', async (msg) => {
         return bot.sendMessage(cid, '🗓 *KALEIDOSKOP CUACA*\nPilih periode ikhtisar cuaca yang ingin dibuat.', { parse_mode: 'Markdown', ...bmkgsatuMenu() });
     }
     
-    if (text === '📈 Ikhtisar') { sessions[cid] = { mode: 'ikhtisar_date' }; return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih tanggal laporan:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); }
+    if (text === '📈 Ikhtisar') {
+        delete sessions[cid];
+        return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih format laporan:', { parse_mode: 'Markdown', ...ikhtisarFormatMenu() });
+    }
     if (text === '☁️ Prakiraan') { return bot.sendMessage(cid, '☁️ *Prakiraan Menu*', { parse_mode: 'Markdown', ...prakiraanMenu() }); }
     if (text === '☁️ Infografis Prakiraan') {
         const ldr = await bot.sendMessage(cid, '⏳ *Menyiapkan Infografis Prakiraan...*\n_Mohon tunggu, sedang mengambil data BMKG._', { parse_mode: 'Markdown' });
@@ -916,12 +990,17 @@ bot.on('message', async (msg) => {
     else if (session.mode === 'smart_weather') { session.weather = text === 'Blank (None)' ? ' ' : text; session.mode = 'smart_clouds'; bot.sendMessage(cid, '☁️ *Masukkan Kondisi Awan (Clouds):*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); }
     else if (session.mode === 'smart_clouds') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: text, chatId: cid, type: 'SMART', createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'message') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, message: text, chatId: cid, createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *MANUAL SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
-    else if ((session.mode === 'ikhtisar_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
+    else if ((session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
         const d = text.match(/\((.*?)\)/)[1];
-        if (session.mode === 'ikhtisar_date') {
+        if (session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date') {
             const ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
             const res = await generateIkhtisar(d, cid, ldr.message_id); 
-            if (res.report) { 
+            if (session.mode === 'ikhtisar_image_date' && res.summary) {
+                await bot.editMessageText(`⏳ *[Final] Rendering gambar IG...*`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' }).catch(() => {});
+                const image = await generateIkhtisarImage(res.summary);
+                await bot.sendPhoto(cid, image, { caption: `📈 *Ikhtisar Cuaca IG - ${d}*`, parse_mode: 'Markdown' });
+                bot.sendMessage(cid, '✅ *Gambar Ikhtisar IG selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') });
+            } else if (res.report) {
                 await bot.sendMessage(cid, res.report, { parse_mode: 'Markdown' }); 
                 bot.sendMessage(cid, '✅ *Proses Ikhtisar Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') }); 
             }
