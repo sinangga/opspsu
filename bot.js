@@ -7,7 +7,7 @@ const fs = require('fs');
 const qs = require('qs');
 const nodemailer = require('nodemailer');
 const { generatePrakiraanImages } = require('./prakiraan');
-const { MONTHS: KALEIDOSKOP_MONTHS, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
+const { MONTHS: KALEIDOSKOP_MONTHS, formatVisibility, fetchDailyVisibilityRange, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
 const kecamatanMap = require('./DashboardNextJS/kecamatan_map.json');
 
 // ================= CONFIG =================
@@ -28,7 +28,15 @@ const BMKGSATU_STATION_NAME = 'Stasiun Meteorologi Pangsuma';
 const ALLOWED_USERNAMES = ['neptruesun'];
 
 // ================= BOT INIT =================
-const bot = new TelegramBot(TOKEN, { polling: true });
+const TELEGRAM_OPTIONS = {
+    polling: {
+        interval: 1000,
+        params: { timeout: 10 },
+    },
+    request: { timeout: 30000 },
+};
+
+const bot = new TelegramBot(TOKEN, TELEGRAM_OPTIONS);
 
 bot.deleteMyCommands().catch(e => console.log('DELETE COMMANDS ERROR:', e.message));
 
@@ -203,17 +211,17 @@ async function fetchRealtimeData() {
 // ================= DATA PROCESSING =================
 async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
     try {
-        if (loaderMsgId) await bot.editMessageText(`⏳ *[1/3] Downloading:* Fetching raw records for ${dateStr}...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+        if (loaderMsgId) await bot.editMessageText(`⏳ *[1/4] Downloading:* Fetching raw records for ${dateStr}...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
         const lRes = await axios.post(`${REALTIME_URL}/api/login`, { username: REALTIME_USER, password: REALTIME_PASS }, { timeout: 5000 });
         const token = lRes.data.data.accessToken;
         const res = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, { headers: { 'Authorization': `Bearer ${token}` }, timeout: 35000 });
-        if (loaderMsgId) await bot.editMessageText(`⏳ *[2/3] Analyzing:* Calculating extreme parameters...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+        if (loaderMsgId) await bot.editMessageText(`⏳ *[2/4] Analyzing:* Calculating extreme parameters...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
         
         const lines = res.data.trim().split(/\r?\n/); if (lines.length < 2) return { report: "❌ *ERROR:* No data records found for " + dateStr };
         const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
         const rows = lines.slice(1).map(l => l.split(d));
         const getI = (n) => h.indexOf(n);
-        const tI = getI('temperature_avg_60'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
+        const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
         
         let tS=0,tC=0,tX=-999,tN=999,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
         const sectors = ["N","NE","E","SE","S","SW","W","NW"];
@@ -221,8 +229,10 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
 
         rows.forEach(r => {
             const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
-            const tv=cl(r[tI]),hv=cl(r[hI]),wv=cl(r[wsI]),rv=cl(r[rI]);
-            if (!isNaN(tv)) { tS+=tv; tC++; tX=Math.max(tX,tv); tN=Math.min(tN,tv); }
+            const tv=cl(r[tI]),txv=cl(r[tMaxI]),hv=cl(r[hI]),wv=cl(r[wsI]),rv=cl(r[rI]);
+            if (!isNaN(tv)) { tS+=tv; tC++; tN=Math.min(tN,tv); }
+            if (!isNaN(txv)) tX=Math.max(tX,txv);
+            else if (!isNaN(tv)) tX=Math.max(tX,tv);
             if (!isNaN(hv)) { hS+=hv; hC++; hX=Math.max(hX,hv); hN=Math.min(hN,hv); }
             if (!isNaN(wv)) wsX=Math.max(wsX,wv);
             
@@ -239,10 +249,22 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         
         const domIdx = sectorFreqs.indexOf(Math.max(...sectorFreqs));
         const dom = sectorFreqs[domIdx] > 0 ? `${sectors[domIdx]} (${(domIdx * 45).toFixed(0)}°)` : "-";
+
+        if (loaderMsgId) await bot.editMessageText(`⏳ *[3/4] BMKG Satu:* Fetching visibility range...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+        let visibilityRange = null;
+        try {
+            visibilityRange = await fetchDailyVisibilityRange(dateStr, BMKGSATU_USER, BMKGSATU_PASS);
+        } catch (visibilityError) {
+            console.error('IKHTISAR VISIBILITY ERR:', visibilityError.message);
+        }
         
-        if (loaderMsgId) await bot.editMessageText(`⏳ *[3/3] Finalizing:* Formatting daily report...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+        if (loaderMsgId) await bot.editMessageText(`⏳ *[4/4] Finalizing:* Formatting daily report...`, { chat_id: chatId, message_id: loaderMsgId, parse_mode: 'Markdown' });
+
+        const visibilityText = visibilityRange && visibilityRange.count > 0
+            ? `\n\n👁 *JARAK PANDANG (BMKG Satu)*\n- 🔺 Max: *${formatVisibility(visibilityRange.maximum)}*\n- 🔻 Min: *${formatVisibility(visibilityRange.minimum)}*\n- 🧾 Data: *${visibilityRange.count} observasi*`
+            : `\n\n👁 *JARAK PANDANG (BMKG Satu)*\n- Data: *Tidak tersedia*`;
         
-        let rep = `📊 *IKHTISAR HARIAN - ${dateStr}*\n\n🌡 *TEMPERATUR*\n- 🔺 Max: *${tX.toFixed(1)}°C*\n- 🔻 Min: *${tN.toFixed(1)}°C*\n- ⚖️ Avg: *${(tS/tC).toFixed(1)}°C*\n\n💧 *KELEMBAPAN (RH)*\n- 🔺 Max: *${Math.round(hX)}%*\n- 🔻 Min: *${Math.round(hN)}%*\n- ⚖️ Avg: *${Math.round(hS/hC)}%*\n\n💨 *ANGIN*\n- ⚡ Max: *${wsX.toFixed(1)} m/s* (${(wsX*1.94).toFixed(1)} KT)\n- 🧭 Dominan: *${dom}*\n\n🌧 *HUJAN 24 JAM*\n- ☔ Total: *${rain.toFixed(1)} mm*`;
+        let rep = `📊 *IKHTISAR HARIAN - ${dateStr}*\n\n🌡 *TEMPERATUR*\n- 🔺 Max: *${tX.toFixed(1)}°C*\n- 🔻 Min: *${tN.toFixed(1)}°C*\n- ⚖️ Avg: *${(tS/tC).toFixed(1)}°C*\n\n💧 *KELEMBAPAN (RH)*\n- 🔺 Max: *${Math.round(hX)}%*\n- 🔻 Min: *${Math.round(hN)}%*\n- ⚖️ Avg: *${Math.round(hS/hC)}%*\n\n💨 *ANGIN*\n- ⚡ Max: *${wsX.toFixed(1)} m/s* (${(wsX*1.94).toFixed(1)} KT)\n- 🧭 Dominan: *${dom}*${visibilityText}\n\n🌧 *HUJAN 24 JAM*\n- ☔ Total: *${rain.toFixed(1)} mm*`;
         return { report: rep, rawData: res.data };
     } catch (e) { return { report: "❌ *ERROR:* " + e.message }; }
 }

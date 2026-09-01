@@ -166,6 +166,29 @@ async function fetchMonthlyRows(year, month, username, password, onProgress = as
     return fetchRowsByRange(monthRange(year, month), username, password, onProgress, 'bulanan');
 }
 
+async function fetchDailyVisibilityRange(dateStr, username, password, onProgress = async () => {}) {
+    const data = await fetchRowsByRange(observationRange(dateStr, dateStr), username, password, onProgress, 'visibility harian');
+    const visibilities = [];
+
+    for (const row of data.rows) {
+        const timestamp = fieldValue(row, ['data_timestamp', 'Data Timestamp'])?.replace(' ', 'T');
+        if (!timestamp || timestamp.slice(0, 10) !== dateStr) continue;
+
+        const visibility = validRange(fieldValue(row, ['visibility_vv', 'Visibility Vv']), 0, 100000);
+        if (visibility !== null) visibilities.push(visibility);
+    }
+
+    if (!visibilities.length) {
+        return { minimum: null, maximum: null, count: 0 };
+    }
+
+    return {
+        minimum: Math.min(...visibilities),
+        maximum: Math.max(...visibilities),
+        count: visibilities.length
+    };
+}
+
 function weatherCategory(code) {
     const value = numberOrNull(code);
     if (value === null) return null;
@@ -722,6 +745,8 @@ async function generateWeeklyKaleidoscope(startDate, endDate, username, password
 module.exports = {
     MONTHS,
     parseCsv,
+    formatVisibility,
+    fetchDailyVisibilityRange,
     summarizeMonthly,
     generateMonthlyKaleidoscope,
     generateWeeklyKaleidoscope
