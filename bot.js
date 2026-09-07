@@ -810,7 +810,7 @@ bot.on('message', async (msg) => {
     // Auth Check
     const isAuth = isAuthenticated(cid);
     const session = sessions[cid];
-    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop') && !isAuth) {
+    if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop' || text === '📈 Ikhtisar' || text === '📝 Teks' || text === '🖼 Infografis' || text === '✏️ Edit Ikhtisar') && !isAuth) {
         sessions[cid] = { mode: 'auth_email', target: text }; 
         return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nOTP wajib diperbarui setiap Senin dan Kamis.\nSilakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
     }
@@ -832,6 +832,8 @@ bot.on('message', async (msg) => {
                 welcomeMsg += 'Silakan ketik /graph atau pilih menu 📊 Graph kembali.';
             } else if (target === '🗓 Kaleidoskop' || target === '🌐 BMKGsatu' || target === '/bmkgsatu' || target === '/kaleidoskop') {
                 welcomeMsg += 'Silakan pilih menu Kaleidoskop kembali.';
+            } else if (target === '📈 Ikhtisar' || target === '📝 Teks' || target === '🖼 Infografis' || target === '✏️ Edit Ikhtisar') {
+                welcomeMsg += 'Silakan pilih menu Ikhtisar kembali.';
             } else {
                 welcomeMsg += 'Silakan ketik /metar untuk masuk ke menu METAR.';
             }
