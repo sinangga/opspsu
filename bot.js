@@ -8,6 +8,7 @@ const qs = require('qs');
 const nodemailer = require('nodemailer');
 const { generatePrakiraanImages } = require('./prakiraan');
 const { generateIkhtisarImage } = require('./ikhtisar_image');
+const { generateHotspotReport, formatHotspotMessage } = require('./hotspot');
 const { MONTHS: KALEIDOSKOP_MONTHS, formatVisibility, fetchDailyWeatherSummary, buildWeatherNarrative, generateMonthlyKaleidoscope, generateWeeklyKaleidoscope } = require('./kaleidoskop');
 const kecamatanMap = require('./DashboardNextJS/kecamatan_map.json');
 
@@ -224,7 +225,7 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         const getI = (n) => h.indexOf(n);
         const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), tMinI = getI('temperature_min_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
         
-        let tS=0,tC=0,tX=-999,tNAvg=999,tNDaily=999,tMinDailyCount=0,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
+        let tS=0,tC=0,tXAvg=-999,tXDaily=-999,tMaxDailyCount=0,tNAvg=999,tNDaily=999,tMinDailyCount=0,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
         const sectors = ["N","NE","E","SE","S","SW","W","NW"];
         const sectorFreqs = new Array(8).fill(0);
 
@@ -232,8 +233,8 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
             const cl = (v) => (!v||v==='')?NaN:parseFloat(v.toString().replace(/\"/g,'').replace(',','.'));
             const tv=cl(r[tI]),txv=cl(r[tMaxI]),tnv=cl(r[tMinI]),hv=cl(r[hI]),wv=cl(r[wsI]),rv=cl(r[rI]);
             if (!isNaN(tv)) { tS+=tv; tC++; tNAvg=Math.min(tNAvg,tv); }
-            if (!isNaN(txv)) tX=Math.max(tX,txv);
-            else if (!isNaN(tv)) tX=Math.max(tX,tv);
+            if (!isNaN(txv)) { tXDaily=txv; tMaxDailyCount++; }
+            else if (!isNaN(tv)) tXAvg=Math.max(tXAvg,tv);
             if (!isNaN(tnv)) { tNDaily=tnv; tMinDailyCount++; }
             if (!isNaN(hv)) { hS+=hv; hC++; hX=Math.max(hX,hv); hN=Math.min(hN,hv); }
             if (!isNaN(wv)) wsX=Math.max(wsX,wv);
@@ -249,6 +250,7 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         });
         if (tC===0) return { report: "❌ *ERROR:* Data file is empty or corrupted." };
 
+        const tX = tMaxDailyCount > 0 ? tXDaily : tXAvg;
         const tN = tMinDailyCount > 0 ? tNDaily : tNAvg;
         
         const domIdx = sectorFreqs.indexOf(Math.max(...sectorFreqs));
@@ -449,7 +451,8 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['❌ Close']], resize_keyboard: true } }; }
+function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['🔥 Hotspot'], ['❌ Close']], resize_keyboard: true, is_persistent: true } }; }
+function hotspotMenu() { return { reply_markup: { keyboard: [['📊 Hitung Hotspot 24 Jam'], ['🏠 Back to Home']], resize_keyboard: true, is_persistent: true } }; }
 function prakiraanMenu() {
     return {
         reply_markup: {
@@ -584,7 +587,7 @@ async function sendKaleidoskopResult(cid, period, generator) {
 function ikhtisarFormatMenu() {
     return {
         reply_markup: {
-            keyboard: [['📝 Teks', '🖼 Infografis'], ['🏠 Back to Home']],
+            keyboard: [['📝 Teks', '🖼 Infografis'], ['✏️ Edit Ikhtisar'], ['🏠 Back to Home']],
             resize_keyboard: true
         }
     };
@@ -598,6 +601,54 @@ function kaleidoskopBackMenu() { return backSubMenu('Kaleidoskop'); }
 function hourPicker() { return { reply_markup: { keyboard: [['00','01','02','03','04','05'],['06','07','08','09','10','11'],['12','13','14','15','16','17'],['18','19','20','21','22','23'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 function minutePicker() { return { reply_markup: { keyboard: [['00','30'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 function weatherPicker() { return { reply_markup: { keyboard: [['Blank (None)'],['TS','BR','-RA','NSW'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
+
+const IKHTISAR_EDIT_FIELDS = [
+    { key: 'temperature.max', label: 'Suhu maksimum (°C)', min: -80, max: 70 },
+    { key: 'temperature.min', label: 'Suhu minimum (°C)', min: -80, max: 70 },
+    { key: 'temperature.avg', label: 'Suhu rata-rata (°C)', min: -80, max: 70 },
+    { key: 'humidity.max', label: 'Kelembapan maksimum (%)', min: 0, max: 100 },
+    { key: 'humidity.min', label: 'Kelembapan minimum (%)', min: 0, max: 100 },
+    { key: 'humidity.avg', label: 'Kelembapan rata-rata (%)', min: 0, max: 100 },
+    { key: 'rainfall.total', label: 'Curah hujan 24 jam (mm)', min: 0, max: 2000 },
+    { key: 'wind.maxMs', label: 'Kecepatan angin maksimum (m/s)', min: 0, max: 150 },
+    { key: 'wind.dominant', label: 'Arah angin dominan', text: true }
+];
+
+function getNestedValue(object, path) {
+    return path.split('.').reduce((value, key) => value?.[key], object);
+}
+
+function setNestedValue(object, path, value) {
+    const parts = path.split('.');
+    const last = parts.pop();
+    const target = parts.reduce((current, key) => current[key], object);
+    target[last] = value;
+}
+
+function ikhtisarEditPrompt(session) {
+    const field = IKHTISAR_EDIT_FIELDS[session.fieldIndex];
+    return `✏️ *EDIT IKHTISAR ${session.dateStr}*\n\nMasukkan *${field.label}*:`;
+}
+
+async function beginIkhtisarEdit(cid, dateStr) {
+    const loader = await bot.sendMessage(cid, `⏳ *Memuat data dasar ikhtisar ${dateStr}...*`, { parse_mode: 'Markdown' });
+    const result = await generateIkhtisar(dateStr, cid, loader.message_id);
+    if (!result.summary) {
+        if (result.report) await bot.sendMessage(cid, result.report, { parse_mode: 'Markdown' });
+        return bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...ikhtisarFormatMenu() });
+    }
+    sessions[cid] = {
+        mode: 'ikhtisar_edit_form',
+        dateStr,
+        fieldIndex: 0,
+        summary: JSON.parse(JSON.stringify(result.summary))
+    };
+    await bot.deleteMessage(cid, loader.message_id).catch(() => {});
+    return bot.sendMessage(cid, ikhtisarEditPrompt(sessions[cid]), {
+        parse_mode: 'Markdown',
+        reply_markup: { keyboard: [['❌ Cancel', '🏠 Back to Home']], resize_keyboard: true }
+    });
+}
 
 function createCalendarKeyboard(year, month) {
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], d = new Date(year, month, 1), kb = [];
@@ -692,7 +743,9 @@ bot.on('callback_query', async (q) => {
         const dStr = data.substring(8), mode = (sessions[cid] || {}).mode || 'ikhtisar_date';
         bot.answerCallbackQuery(q.id); bot.deleteMessage(cid, q.message.message_id);
         const ldr = await bot.sendMessage(cid, `⏳ *Memproses data untuk ${dStr}...*`, { parse_mode: 'Markdown' });
-        if (mode === 'ikhtisar_date' || mode === 'ikhtisar_image_date') {
+        if (mode === 'ikhtisar_edit_date') {
+            return beginIkhtisarEdit(cid, dStr);
+        } else if (mode === 'ikhtisar_date' || mode === 'ikhtisar_image_date') {
             const res = await generateIkhtisar(dStr, cid, ldr.message_id);
             if (mode === 'ikhtisar_image_date' && res.summary) {
                 await bot.editMessageText(`⏳ *[Final] Rendering gambar IG...*`, { chat_id: cid, message_id: ldr.message_id, parse_mode: 'Markdown' }).catch(() => {});
@@ -801,6 +854,10 @@ bot.on('message', async (msg) => {
         sessions[cid] = { mode: 'ikhtisar_image_date' };
         return bot.sendMessage(cid, '🖼 *IKHTISAR INFOGRAFIS*\nPilih tanggal untuk dibuat gambar Instagram.', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
     }
+    if (text === '✏️ Edit Ikhtisar') {
+        sessions[cid] = { mode: 'ikhtisar_edit_date' };
+        return bot.sendMessage(cid, '✏️ *EDIT IKHTISAR INFOGRAFIS*\nPilih tanggal yang akan diedit:', { parse_mode: 'Markdown', ...ikhtisarDateMenu() });
+    }
     if (text === '🔙 Back to GRAPH MENU') {
         if (!isAuth) {
             sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
@@ -819,6 +876,25 @@ bot.on('message', async (msg) => {
     if (text === '📈 Ikhtisar') {
         delete sessions[cid];
         return bot.sendMessage(cid, '📈 *IKHTISAR MENU*\nPilih format laporan:', { parse_mode: 'Markdown', ...ikhtisarFormatMenu() });
+    }
+    if (text === '🔥 Hotspot') {
+        delete sessions[cid];
+        return bot.sendMessage(cid, '🔥 *HOTSPOT SIPONGI*\nPilih operasi yang ingin dijalankan:', { parse_mode: 'Markdown', ...hotspotMenu() });
+    }
+    if (text === '📊 Hitung Hotspot 24 Jam') {
+        const loader = await bot.sendMessage(cid, '⏳ *Mengunduh data hotspot SIPONGI...*', { parse_mode: 'Markdown' });
+        try {
+            const result = await generateHotspotReport();
+            await bot.editMessageText('⏳ *Menyusun rekap per kecamatan dan kepercayaan...*', { chat_id: cid, message_id: loader.message_id, parse_mode: 'Markdown' }).catch(() => {});
+            await bot.sendMessage(cid, formatHotspotMessage(result), { parse_mode: 'Markdown' });
+            await bot.sendDocument(cid, result.workbook, { caption: '📎 Workbook hotspot SIPONGI. Data detail tetap berada di sheet Detail; rekap tersedia di sheet Rekap.' }, { filename: result.fileName });
+            await bot.deleteMessage(cid, loader.message_id).catch(() => {});
+            return bot.sendMessage(cid, '✅ *Rekap hotspot selesai.*', { parse_mode: 'Markdown', ...hotspotMenu() });
+        } catch (error) {
+            console.error('HOTSPOT ERR:', error.stack || error.message);
+            await bot.editMessageText(`❌ *Hotspot gagal diproses.*\n\n${error.message}`, { chat_id: cid, message_id: loader.message_id, parse_mode: 'Markdown' }).catch(() => {});
+            return bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...hotspotMenu() });
+        }
     }
     if (text === '☁️ Prakiraan') { return bot.sendMessage(cid, '☁️ *Prakiraan Menu*', { parse_mode: 'Markdown', ...prakiraanMenu() }); }
     if (text === '☁️ Infografis Prakiraan') {
@@ -993,9 +1069,46 @@ bot.on('message', async (msg) => {
     else if (session.mode === 'smart_weather') { session.weather = text === 'Blank (None)' ? ' ' : text; session.mode = 'smart_clouds'; bot.sendMessage(cid, '☁️ *Masukkan Kondisi Awan (Clouds):*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); }
     else if (session.mode === 'smart_clouds') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: text, chatId: cid, type: 'SMART', createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'message') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, message: text, chatId: cid, createdBy: msg.from.username }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *MANUAL SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
-    else if ((session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
+    else if (session.mode === 'ikhtisar_edit_form') {
+        const field = IKHTISAR_EDIT_FIELDS[session.fieldIndex];
+        if (!field) {
+            delete sessions[cid];
+            return bot.sendMessage(cid, '❌ Form edit tidak valid. Silakan mulai ulang dari menu Ikhtisar.', { parse_mode: 'Markdown', ...ikhtisarFormatMenu() });
+        }
+        if (field.text) {
+            if (!text.trim()) return bot.sendMessage(cid, `❌ Nilai tidak boleh kosong.\n\n${ikhtisarEditPrompt(session)}`, { parse_mode: 'Markdown' });
+            setNestedValue(session.summary, field.key, text.trim());
+        } else {
+            const value = Number(text.replace(',', '.'));
+            if (!Number.isFinite(value) || value < field.min || value > field.max) {
+                return bot.sendMessage(cid, `❌ Masukkan angka ${field.min} sampai ${field.max}.\n\n${ikhtisarEditPrompt(session)}`, { parse_mode: 'Markdown' });
+            }
+            setNestedValue(session.summary, field.key, value.toFixed(1));
+        }
+        session.fieldIndex += 1;
+        if (session.fieldIndex < IKHTISAR_EDIT_FIELDS.length) {
+            return bot.sendMessage(cid, ikhtisarEditPrompt(session), { parse_mode: 'Markdown' });
+        }
+        const loader = await bot.sendMessage(cid, '⏳ *Membuat infografis ikhtisar hasil edit...*', { parse_mode: 'Markdown' });
+        try {
+            session.summary.wind.maxKt = (Number(session.summary.wind.maxMs) * 1.94).toFixed(1);
+            const image = await generateIkhtisarImage(session.summary);
+            await bot.deleteMessage(cid, loader.message_id).catch(() => {});
+            await bot.sendPhoto(cid, image, { caption: `✏️ *Ikhtisar Cuaca Hasil Edit - ${session.dateStr}*`, parse_mode: 'Markdown' });
+            delete sessions[cid];
+            return bot.sendMessage(cid, '✅ *Infografis hasil edit selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') });
+        } catch (error) {
+            console.error('IKHTISAR EDIT ERR:', error.stack || error.message);
+            await bot.editMessageText(`❌ *Gagal membuat infografis.*\n\n${error.message}`, { chat_id: cid, message_id: loader.message_id, parse_mode: 'Markdown' }).catch(() => {});
+            delete sessions[cid];
+            return bot.sendMessage(cid, 'Pilih menu berikutnya:', { ...ikhtisarFormatMenu() });
+        }
+    }
+    else if ((session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date' || session.mode === 'ikhtisar_edit_date' || session.mode === 'graph_date') && (text.startsWith('Hari Ini') || text.startsWith('Kemarin'))) {
         const d = text.match(/\((.*?)\)/)[1];
-        if (session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date') {
+        if (session.mode === 'ikhtisar_edit_date') {
+            return beginIkhtisarEdit(cid, d);
+        } else if (session.mode === 'ikhtisar_date' || session.mode === 'ikhtisar_image_date') {
             const ldr = await bot.sendMessage(cid, `⏳ *Sedang memproses...*`, { parse_mode: 'Markdown' });
             const res = await generateIkhtisar(d, cid, ldr.message_id); 
             if (session.mode === 'ikhtisar_image_date' && res.summary) {
