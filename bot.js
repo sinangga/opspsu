@@ -241,9 +241,9 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         const d = lines[0].includes(';') ? ';' : ',', h = lines[0].split(d).map(s => s.trim().replace(/^\ufeff/, ''));
         const rows = lines.slice(1).map(l => l.split(d));
         const getI = (n) => h.indexOf(n);
-        const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), tMinI = getI('temperature_min_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
+        const tI = getI('temperature_avg_60'), tMaxI = getI('temperature_max_86400'), tMinI = getI('temperature_min_86400'), hI = getI('humidity_avg_60'), rI = getI('precipitation_accum_3600'), r24I = getI('precipitation_accum_86400'), wsI = getI('wind_speed_max_60'), wdI = getI('wind_direction_prevailing_60');
         
-        let tS=0,tC=0,tXAvg=-999,tXDaily=-999,tMaxDailyCount=0,tNAvg=999,tNDaily=999,tMinDailyCount=0,hS=0,hC=0,hX=-999,hN=999,wsX=0,rain=0;
+        let tS=0,tC=0,tXAvg=-999,tXDaily=-999,tMaxDailyCount=0,tNAvg=999,tNDaily=999,tMinDailyCount=0,hS=0,hC=0,hX=-999,hN=999,wsX=0,rainHourly=0,rain24Latest=null,rain24LatestTimestamp=-Infinity;
         const sectors = ["N","NE","E","SE","S","SW","W","NW"];
         const sectorFreqs = new Array(8).fill(0);
 
@@ -264,9 +264,18 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
                 let idx = Math.floor(((wdv + 22.5) % 360) / 45);
                 sectorFreqs[idx]++;
             }
-            if (new Date(r[0]*1000).getUTCMinutes() === 59 && !isNaN(rv)) rain+=rv;
+            const timestamp = Number(String(r[0] || '').replace(/"/g, ''));
+            if (new Date(timestamp * 1000).getUTCMinutes() === 59 && !isNaN(rv)) rainHourly += rv;
+            const rain24v = cl(r[r24I]);
+            if (Number.isFinite(timestamp) && Number.isFinite(rain24v) && rain24v >= 0 && rain24v < 1000 && timestamp > rain24LatestTimestamp) {
+                rain24Latest = rain24v;
+                rain24LatestTimestamp = timestamp;
+            }
         });
         if (tC===0) return { report: "❌ *ERROR:* Data file is empty or corrupted." };
+
+        // Match the AWS dashboard, which displays the latest rolling 24-hour rainfall.
+        const rain = rain24Latest ?? rainHourly;
 
         const tX = tMaxDailyCount > 0 ? tXDaily : tXAvg;
         const tN = tMinDailyCount > 0 ? tNDaily : tNAvg;
@@ -334,6 +343,39 @@ async function generateIkhtisar(dateStr, chatId, loaderMsgId) {
         let rep = `📊 *IKHTISAR HARIAN - ${dateStr}*\n\n🌡 *TEMPERATUR*\n- 🔺 Max: *${tX.toFixed(1)}°C*\n- 🔻 Min: *${tN.toFixed(1)}°C*\n- ⚖️ Avg: *${(tS/tC).toFixed(1)}°C*\n\n💧 *KELEMBAPAN (RH)*\n- 🔺 Max: *${Math.round(hX)}%*\n- 🔻 Min: *${Math.round(hN)}%*\n- ⚖️ Avg: *${Math.round(hS/hC)}%*\n\n💨 *ANGIN*\n- ⚡ Max: *${wsX.toFixed(1)} m/s* (${(wsX*1.94).toFixed(1)} KT)\n- 🧭 Dominan: *${dom}*${visibilityText}\n\n🌧 *HUJAN 24 JAM*\n- ☔ Total: *${rain.toFixed(1)} mm*`;
         return { report: rep, rawData: res.data, summary };
     } catch (e) { return { report: "❌ *ERROR:* " + e.message }; }
+}
+
+async function fetchAwsRainfallForDate(dateStr) {
+    const loginResponse = await axios.post(`${REALTIME_URL}/api/login`, { username: REALTIME_USER, password: REALTIME_PASS }, { timeout: 5000 });
+    const response = await axios.get(`${REALTIME_URL}/api/historical/${dateStr}.csv`, {
+        headers: { 'Authorization': `Bearer ${loginResponse.data.data.accessToken}` },
+        timeout: 35000
+    });
+    const lines = String(response.data).trim().split(/\r?\n/);
+    if (lines.length < 2) return null;
+    const delimiter = lines[0].includes(';') ? ';' : ',';
+    const headers = lines[0].split(delimiter).map(value => value.trim().replace(/^\ufeff/, '').replace(/^"|"$/g, ''));
+    const timestampIndex = 0;
+    // Match the AWS dashboard: it displays the latest rolling 24-hour value.
+    const rainfallIndex = headers.indexOf('precipitation_accum_86400');
+    if (rainfallIndex < 0) return null;
+
+    let latestTimestamp = -Infinity;
+    let latestRainfall = null;
+    for (const line of lines.slice(1)) {
+        const row = line.split(delimiter);
+        const timestamp = Number(String(row[timestampIndex] || '').replace(/"/g, ''));
+        const observationDate = Number.isFinite(timestamp)
+            ? new Date(timestamp * 1000)
+            : new Date(String(row[timestampIndex] || '').replace(/"/g, ''));
+        if (Number.isNaN(observationDate.getTime()) || observationDate.toISOString().slice(0, 10) !== dateStr) continue;
+        const value = Number(String(row[rainfallIndex] || '').replace(/"/g, '').replace(',', '.'));
+        if (Number.isFinite(value) && value >= 0 && value < 1000 && observationDate.getTime() > latestTimestamp) {
+            latestTimestamp = observationDate.getTime();
+            latestRainfall = value;
+        }
+    }
+    return latestRainfall === null ? null : Number(latestRainfall.toFixed(1));
 }
 
 async function generateGraphData(type, dateStr, chatId, loaderMsgId) {
@@ -1143,9 +1185,23 @@ bot.on('message', async (msg) => {
         if (!option) {
             return bot.sendMessage(cid, 'Pilih periode minggu dari keyboard yang tersedia.', { ...kaleidoskopWeekReplyKeyboard(session.options || buildKaleidoskopWeekOptions()) });
         }
-        return sendKaleidoskopResult(cid, option.label, updateProgress =>
-            generateWeeklyKaleidoscope(option.startDate, option.endDate, BMKGSATU_USER, BMKGSATU_PASS, updateProgress)
-        );
+        return sendKaleidoskopResult(cid, option.label, async updateProgress => {
+            const currentDate = new Date().toISOString().slice(0, 10);
+            let currentRainfall;
+            if (option.endDate === currentDate) {
+                try {
+                    await updateProgress('Mengambil hujan hari ini dari AWS');
+                    currentRainfall = await fetchAwsRainfallForDate(currentDate);
+                } catch (error) {
+                    console.error('KALEIDOSKOP AWS RAINFALL ERR:', error.message);
+                    currentRainfall = undefined;
+                }
+            }
+            return generateWeeklyKaleidoscope(option.startDate, option.endDate, BMKGSATU_USER, BMKGSATU_PASS, updateProgress, {
+                currentDate,
+                currentRainfall
+            });
+        });
     }
     if (session.mode === 'send_now') { 
         bot.sendMessage(cid, '⏳ *Sedang mengirim METAR...*', { parse_mode: 'Markdown' });

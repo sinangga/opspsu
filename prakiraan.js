@@ -210,7 +210,7 @@ async function generatePrakiraanImages() {
                 background: linear-gradient(135deg, ${BMKG_DARK} 0%, ${BMKG_PRIMARY} 50%, ${BMKG_ACCENT} 100%);
             }
             td { padding: 5px 2px; text-align: center; border-right: 1px solid rgba(148,163,184,0.15); border-bottom: 1px solid rgba(148,163,184,0.15); line-height: 1; }
-            .td-kec { padding: 6px 10px; font-size: 15px; font-weight: 900; text-align: left; background: #f1f5f9; color: #0f172a; }
+            .td-kec { padding: 6px 10px; font-size: 15px; font-weight: 900; text-align: left; background: #f1f5f9; color: #000000; }
             .td-value { font-size: 14.5px; font-weight: 800; }
             .icon-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
             .icon-wrapper img { width: 30px; height: 30px; }

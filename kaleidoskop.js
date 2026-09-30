@@ -462,15 +462,17 @@ function summarizeMonthly(rows, year, month, options = {}) {
         if (category) weather.set(category, (weather.get(category) || 0) + 1);
     }
 
-    if (!temps.length) throw new Error('Parameter suhu bulanan tidak tersedia');
-    if (!tempMin || !tempMax) {
-        for (const [date, day] of daily.entries()) {
-            if (!isTargetDate(date) || !day.temps.length) continue;
-            const fallbackMin = Math.min(...day.temps);
-            const fallbackMax = Math.max(...day.temps);
-            if (!tempMin || fallbackMin < tempMin.value) tempMin = { value: fallbackMin, date };
-            if (!tempMax || fallbackMax > tempMax.value) tempMax = { value: fallbackMax, date };
-        }
+    if (!temps.length) throw new Error('Parameter suhu pada periode tidak tersedia');
+    // Fill missing daily extremes from observed dry-bulb values, then compare
+    // every day so one missing synoptic TX/TN report cannot distort the period.
+    for (const [date, day] of daily.entries()) {
+        if (!isTargetDate(date) || !day.temps.length) continue;
+        const fallbackMin = Math.min(...day.temps);
+        const fallbackMax = Math.max(...day.temps);
+        if (day.tempMin === null) day.tempMin = fallbackMin;
+        if (day.tempMax === null) day.tempMax = fallbackMax;
+        if (!tempMin || day.tempMin < tempMin.value) tempMin = { value: day.tempMin, date };
+        if (!tempMax || day.tempMax > tempMax.value) tempMax = { value: day.tempMax, date };
     }
     const dailyEntries = [...daily.entries()].sort(([a], [b]) => a.localeCompare(b));
     const rainDays = dailyEntries.filter(([, day]) => day.trace || (day.rainfall !== null && day.rainfall >= 0.1));
@@ -511,6 +513,7 @@ function summarizeMonthly(rows, year, month, options = {}) {
         const day = daily.get(date);
         return {
             day: Number(date.slice(8, 10)),
+            date,
             rain: day?.rainfall ?? null,
             trace: day?.trace || false,
             temp: day?.temps?.length ? avg(day.temps) : null,
@@ -523,7 +526,7 @@ function summarizeMonthly(rows, year, month, options = {}) {
     if (rainDays.length) highlights.push(`Hujan tercatat pada ${rainDays.length} hari, termasuk ${traceDays.length} hari hujan tidak terukur.`);
     if (visibilityMin) highlights.push(`Jarak pandang terendah tercatat ${formatVisibility(visibilityMin.value)} pada ${formatDay(visibilityMin.date)}.`);
     if (windMax) highlights.push(`Angin terkuat mencapai ${windMax.value.toFixed(0)} knot pada ${formatDay(windMax.date)}.`);
-    if (!highlights.length) highlights.push('Kondisi cuaca bulanan cenderung stabil berdasarkan pengamatan yang tersedia.');
+    if (!highlights.length) highlights.push(`Kondisi cuaca ${periodType.toLowerCase()} cenderung stabil berdasarkan pengamatan yang tersedia.`);
 
     return {
         year, month, period,
@@ -557,6 +560,45 @@ function summarizeMonthly(rows, year, month, options = {}) {
         highlights: highlights.slice(0, 3),
         chartDays
     };
+}
+
+function applyCurrentRainfall(summary, currentDate, rainfall) {
+    if (!summary || !currentDate || !Number.isFinite(rainfall)) return summary;
+    const currentDay = summary.chartDays.find(day => day.date === currentDate);
+    if (!currentDay) return summary;
+
+    currentDay.rain = rainfall;
+    currentDay.trace = false;
+    const measuredDays = summary.chartDays.filter(day => Number.isFinite(day.rain));
+    const traceDays = summary.chartDays.filter(day => day.trace);
+    const rainyDays = measuredDays.filter(day => day.rain >= 0.1);
+    const events = {
+        'Hujan ringan': [],
+        'Hujan sedang': [],
+        'Hujan lebat': [],
+        'Hujan sangat lebat': [],
+        'Hujan ekstrem': []
+    };
+    let maximum = null;
+    for (const day of measuredDays) {
+        if (day.rain >= 0.5) {
+            const category = rainfallCategory(day.rain);
+            if (category) events[category].push(day.date);
+        }
+        if (!maximum || day.rain > maximum.value) maximum = { value: day.rain, date: day.date };
+    }
+    summary.rainfall.total = measuredDays.reduce((sum, day) => sum + day.rain, 0);
+    summary.rainfall.rainyDays = rainyDays.length + traceDays.length;
+    summary.rainfall.traceDays = traceDays.length;
+    summary.rainfall.maximum = maximum;
+    summary.rainfall.events = events;
+    const highlights = [];
+    if (maximum && maximum.value >= 50) highlights.push(`Hujan tertinggi ${maximum.value.toFixed(1)} mm terjadi pada ${formatDay(maximum.date)}.`);
+    if (summary.rainfall.rainyDays) highlights.push(`Hujan tercatat pada ${summary.rainfall.rainyDays} hari, termasuk ${traceDays.length} hari hujan tidak terukur.`);
+    if (summary.visibility.minimum) highlights.push(`Jarak pandang terendah tercatat ${formatVisibility(summary.visibility.minimum.value)} pada ${formatDay(summary.visibility.minimum.date)}.`);
+    if (summary.wind.maximum) highlights.push(`Angin terkuat mencapai ${summary.wind.maximum.value.toFixed(0)} knot pada ${formatDay(summary.wind.maximum.date)}.`);
+    summary.highlights = (highlights.length ? highlights : [`Kondisi cuaca ${summary.periodType.toLowerCase()} cenderung stabil berdasarkan pengamatan yang tersedia.`]).slice(0, 3);
+    return summary;
 }
 
 function rainChart(days) {
@@ -742,7 +784,7 @@ async function renderInfographic(summary) {
                 <div class="card group group-2">
                     <h2>💧 <span>Kelembapan</span></h2>
                     <div class="metric-list">
-                        <div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara bulanan</div></div>
+                        <div class="mini"><div class="label">Rata-rata</div><div class="value">${summary.humidity.average?.toFixed(0) || '–'}%</div><div class="detail">Kondisi udara ${summary.periodType.toLowerCase()}</div></div>
                         <div class="mini"><div class="label">Minimum</div><div class="value">${summary.humidity.minimum?.value.toFixed(0) || '–'}%</div><div class="detail">${summary.humidity.minimum ? formatDay(summary.humidity.minimum.date) : 'Tidak tersedia'}</div></div>
                     </div>
                 </div>
@@ -792,7 +834,7 @@ async function generateMonthlyKaleidoscope(year, month, username, password, onPr
     };
 }
 
-async function generateWeeklyKaleidoscope(startDate, endDate, username, password, onProgress) {
+async function generateWeeklyKaleidoscope(startDate, endDate, username, password, onProgress, options = {}) {
     const data = await fetchRowsByRange(observationRange(startDate, endDate), username, password, onProgress, 'mingguan');
     const rows = data.rows;
     const period = `${formatDay(startDate)} - ${formatDay(endDate)}`;
@@ -802,6 +844,9 @@ async function generateWeeklyKaleidoscope(startDate, endDate, username, password
         period,
         periodType: 'Mingguan'
     });
+    if (options.currentDate && options.currentRainfall !== undefined) {
+        applyCurrentRainfall(summary, options.currentDate, options.currentRainfall);
+    }
     await onProgress('Menyusun infografis kaleidoskop');
     const image = await renderInfographic(summary);
     return {
