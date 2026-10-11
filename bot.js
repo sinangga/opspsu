@@ -27,8 +27,8 @@ const BMKGSATU_USER = process.env.BMKGSATU_USER;
 const BMKGSATU_PASS = process.env.BMKGSATU_PASS;
 const BMKGSATU_STATION_NAME = 'Stasiun Meteorologi Pangsuma';
 
-const ALLOWED_USERNAMES = ['neptruesun'];
-const SUPERUSER_USERNAME = 'neptruesun';
+const ALLOWED_USERNAMES = ['neptruesun', 'primarisky'];
+const SUPERUSER_USERNAMES = ['neptruesun', 'primarisky'];
 const SUPERUSER_EMAIL = 'muhammad.suyudi@bmkg.go.id';
 
 // ================= BOT INIT =================
@@ -74,8 +74,12 @@ function latestOtpResetAt(nowMs = Date.now()) {
     return nowMs >= todayReset ? todayReset : todayReset - 24 * 60 * 60 * 1000;
 }
 
+function isSuperUsername(username = '') {
+    return SUPERUSER_USERNAMES.includes(String(username || '').toLowerCase());
+}
+
 function isAuthenticated(userId, username = '') {
-    if (String(username || '').toLowerCase() === SUPERUSER_USERNAME) return true;
+    if (isSuperUsername(username)) return true;
     const user = verifiedUsers[userId];
     if (!user) return false;
     const now = Date.now();
@@ -88,7 +92,7 @@ function isAuthenticated(userId, username = '') {
 function isSuperUser(msg, chatId) {
     const username = String(msg?.from?.username || '').toLowerCase();
     const verifiedEmail = String(verifiedUsers[chatId]?.email || '').toLowerCase();
-    return username === SUPERUSER_USERNAME || verifiedEmail === SUPERUSER_EMAIL;
+    return isSuperUsername(username) || verifiedEmail === SUPERUSER_EMAIL;
 }
 
 function isSmartScheduleAllowed(msg, chatId, now = new Date()) {
@@ -508,7 +512,7 @@ function registerSchedule(item) {
 // ================= MENUS =================
 function mainMenu(username = '') {
     const keyboard = [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['🔥 Hotspot'], ['❌ Close']];
-    if (String(username || '').toLowerCase() === SUPERUSER_USERNAME) keyboard.unshift(['✈️ METAR']);
+    if (isSuperUsername(username)) keyboard.unshift(['✈️ METAR']);
     return { reply_markup: { keyboard, resize_keyboard: true, is_persistent: true } };
 }
 function hotspotMenu() { return { reply_markup: { keyboard: [['📊 Hitung Hotspot 24 Jam'], ['🏠 Back to Home']], resize_keyboard: true, is_persistent: true } }; }
