@@ -469,7 +469,8 @@ function registerSchedule(item) {
                 };
 
                 const qnh = Math.floor(r.qnh || 1013);
-                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${qnh.toString().padStart(4,'0')} NOSIG=`;
+                const trend = item.trend === '' ? '' : ' NOSIG=';
+                msg = `SAID40 ${r.icao_id} ${day}${time}\nMETAR ${r.icao_id} ${day}${time}Z ${w} ${item.visibility} ${item.weather} ${item.clouds} ${f(r.temperature)}/${f(r.dewpoint)} Q${qnh.toString().padStart(4,'0')}${trend}`;
                 console.log(`[SCHEDULE] Generated METAR: ${msg.replace(/\n/g, ' ')}`);
             } else {
                 console.error(`[SCHEDULE] FAILED to fetch sensor data for ID: ${item.id}`);
@@ -505,7 +506,11 @@ function registerSchedule(item) {
 }
 
 // ================= MENUS =================
-function mainMenu() { return { reply_markup: { keyboard: [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['🔥 Hotspot'], ['❌ Close']], resize_keyboard: true, is_persistent: true } }; }
+function mainMenu(username = '') {
+    const keyboard = [['📈 Ikhtisar', '☁️ Prakiraan'], ['📊 Graph', '🗓 Kaleidoskop'], ['🔥 Hotspot'], ['❌ Close']];
+    if (String(username || '').toLowerCase() === SUPERUSER_USERNAME) keyboard.unshift(['✈️ METAR']);
+    return { reply_markup: { keyboard, resize_keyboard: true, is_persistent: true } };
+}
 function hotspotMenu() { return { reply_markup: { keyboard: [['📊 Hitung Hotspot 24 Jam'], ['🏠 Back to Home']], resize_keyboard: true, is_persistent: true } }; }
 function prakiraanMenu() {
     return {
@@ -703,7 +708,8 @@ function backSubMenu(cat) { return { reply_markup: { keyboard: [[`🔙 Back to $
 function kaleidoskopBackMenu() { return backSubMenu('Kaleidoskop'); }
 function hourPicker() { return { reply_markup: { keyboard: [['00','01','02','03','04','05'],['06','07','08','09','10','11'],['12','13','14','15','16','17'],['18','19','20','21','22','23'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 function minutePicker() { return { reply_markup: { keyboard: [['00','30'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
-function weatherPicker() { return { reply_markup: { keyboard: [['Blank (None)'],['TS','BR','-RA','NSW'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
+function weatherPicker() { return { reply_markup: { keyboard: [['Blank (None)'],['TS','BR','-RA','NSW'],['FU','HZ'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
+function trendPicker() { return { reply_markup: { keyboard: [['NOSIG','Blank'],['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }; }
 
 const IKHTISAR_EDIT_FIELDS = [
     { key: 'temperature.max', label: 'Suhu maksimum (°C)', min: -80, max: 70 },
@@ -900,7 +906,7 @@ bot.on('callback_query', async (q) => {
         }
     } else if (data === 'back_prakiraan') {
         bot.editMessageText('☁️ *Prakiraan Menu*', { chat_id: cid, message_id: q.message.message_id, parse_mode: 'Markdown', ...prakiraanMenu() });
-    } else if (data === 'back_home') { delete sessions[cid]; bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*', { parse_mode: 'Markdown', ...mainMenu() }); }
+    } else if (data === 'back_home') { delete sessions[cid]; bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*', { parse_mode: 'Markdown', ...mainMenu(q.from?.username) }); }
     bot.answerCallbackQuery(q.id).catch(() => {});
 });
 
@@ -908,7 +914,7 @@ bot.on('message', async (msg) => {
     if (!isAllowed(msg) || !msg.text) return;
     const text = msg.text, cid = msg.chat.id;
 
-    if (text === '/start' || text === '🏠 Back to Home') { delete sessions[cid]; return bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*\nPilih menu yang Anda inginkan.', { parse_mode: 'Markdown', ...mainMenu() }); }
+    if (text === '/start' || text === '🏠 Back to Home') { delete sessions[cid]; return bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*\nPilih menu yang Anda inginkan.', { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) }); }
     
     // Auth Check
     let session = sessions[cid];
@@ -926,7 +932,7 @@ bot.on('message', async (msg) => {
         const otp = Math.floor(100000 + Math.random() * 900000); session.mode = 'auth_otp'; session.email = text; session.otp = otp;
         bot.sendMessage(cid, `⏳ *Mengirim kode verifikasi ke ${text}...*`, { parse_mode: 'Markdown' });
         if (await sendOTP(text, otp)) return bot.sendMessage(cid, '✅ *OTP Terkirim!* Silakan masukkan 6 digit kode verifikasi Anda:', { parse_mode: 'Markdown' });
-        else { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Gagal mengirim email.* Hubungi admin.', { parse_mode: 'Markdown', ...mainMenu() }); }
+        else { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Gagal mengirim email.* Hubungi admin.', { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) }); }
     }
     if (session && session.mode === 'auth_otp') {
         if (text == session.otp) { 
@@ -944,7 +950,7 @@ bot.on('message', async (msg) => {
             } else {
                 welcomeMsg += 'Silakan ketik /metar untuk masuk ke menu METAR.';
             }
-            return bot.sendMessage(cid, welcomeMsg, { parse_mode: 'Markdown', ...mainMenu() }); 
+            return bot.sendMessage(cid, welcomeMsg, { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) });
         }
         else return bot.sendMessage(cid, '❌ *OTP Salah.* Silakan coba lagi:', { parse_mode: 'Markdown' });
     }
@@ -1126,7 +1132,7 @@ bot.on('message', async (msg) => {
     if (text === '📋 Active Schedule') { const s = schedules.filter(x => x.chatId === cid); if (s.length === 0) return bot.sendMessage(cid, 'ℹ️ Tidak ada jadwal aktif.', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); s.forEach(i => bot.sendMessage(cid, `🆔 ID: \`${i.id}\`\n🕒 UTC: *${i.hour}:${i.minute}*\n📝 Tipe: ${i.type||'MANUAL'}\n📧 OTP: ${i.otpEmail || 'Tidak tercatat'}`, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🗑 Hapus Jadwal', callback_data: `delete_${i.id}` }]] } })); return bot.sendMessage(cid, '--- Akhir Daftar ---', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
     if (text === '📜 History') return sendHistoryPage(cid, 0);
     if (text === '📥 Load More') return sendHistoryPage(cid, sessions[cid]?.mode === 'history' ? sessions[cid].offset : 0);
-    if (text === '🧹 Clear Chat') { const msgs = messageHistory[cid] || []; msgs.forEach(m => bot.deleteMessage(cid, m).catch(()=>{})); messageHistory[cid] = []; return bot.sendMessage(cid, '🧹 *Chat Dibersihkan*', { parse_mode: 'Markdown', ...mainMenu() }); }
+    if (text === '🧹 Clear Chat') { const msgs = messageHistory[cid] || []; msgs.forEach(m => bot.deleteMessage(cid, m).catch(()=>{})); messageHistory[cid] = []; return bot.sendMessage(cid, '🧹 *Chat Dibersihkan*', { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) }); }
     
     if (['💨 Windrose','🌡 T-Td-RH','🌧 Rainfall'].includes(text)) { 
         if (!isAuth) {
@@ -1137,7 +1143,7 @@ bot.on('message', async (msg) => {
         return bot.sendMessage(cid, `📊 *${text}*\nPilih tanggal grafik:`, { parse_mode: 'Markdown', ...ikhtisarDateMenu() }); 
     }
 
-    if (text === '❌ Cancel' && session && ['send_now', 'hour', 'minute', 'message', 'smart_hour', 'smart_minute', 'smart_visibility', 'smart_weather', 'smart_clouds'].includes(session.mode)) {
+    if (text === '❌ Cancel' && session && ['send_now', 'hour', 'minute', 'message', 'smart_hour', 'smart_minute', 'smart_visibility', 'smart_weather', 'smart_clouds', 'smart_trend'].includes(session.mode)) {
         delete sessions[cid];
         return bot.sendMessage(cid, '❌ *Operasi dibatalkan.* Tidak ada data yang dikirim ke server.', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
     }
@@ -1214,7 +1220,8 @@ bot.on('message', async (msg) => {
     else if (session.mode === 'minute' || session.mode === 'smart_minute') { session.minute = parseInt(text); if (session.mode === 'smart_minute') { session.mode = 'smart_visibility'; bot.sendMessage(cid, '👀 *Masukkan Jarak Pandang (Visibility):*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); } else { session.mode = 'message'; bot.sendMessage(cid, '✍️ *Masukkan Sandi METAR Lengkap:*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); } }
     else if (session.mode === 'smart_visibility') { session.visibility = text; session.mode = 'smart_weather'; bot.sendMessage(cid, '⛈ *Pilih Kondisi Cuaca (Present Weather):*', { parse_mode: 'Markdown', ...weatherPicker() }); }
     else if (session.mode === 'smart_weather') { session.weather = text === 'Blank (None)' ? ' ' : text; session.mode = 'smart_clouds'; bot.sendMessage(cid, '☁️ *Masukkan Kondisi Awan (Clouds):*', { parse_mode: 'Markdown', reply_markup: { keyboard: [['❌ Cancel','🏠 Back to Home']], resize_keyboard: true } }); }
-    else if (session.mode === 'smart_clouds') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: text, chatId: cid, type: 'SMART', createdBy: msg.from.username, otpEmail: verifiedUsers[cid]?.email || null }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
+    else if (session.mode === 'smart_clouds') { session.clouds = text; session.mode = 'smart_trend'; bot.sendMessage(cid, '📈 *Pilih TREND setelah tekanan:*', { parse_mode: 'Markdown', ...trendPicker() }); }
+    else if (session.mode === 'smart_trend') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, visibility: session.visibility, weather: session.weather, clouds: session.clouds, trend: text === 'Blank' ? '' : text, chatId: cid, type: 'SMART', createdBy: msg.from.username, otpEmail: verifiedUsers[cid]?.email || null }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *SMART SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*\nℹ️ Bot akan menarik data sensor otomatis pada jam tersebut.`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'message') { const item = { id: Date.now(), hour: session.hour, minute: session.minute, message: text, chatId: cid, createdBy: msg.from.username, otpEmail: verifiedUsers[cid]?.email || null }; schedules.push(item); saveSchedules(); registerSchedule(item); bot.sendMessage(cid, `✅ *MANUAL SCHEDULE REGISTERED*\n\n🆔 ID: \`${item.id}\`\n🕒 Jam: *${item.hour}:${item.minute} UTC*`, { parse_mode: 'Markdown', ...backSubMenu('METAR') }); delete sessions[cid]; }
     else if (session.mode === 'ikhtisar_edit_form') {
         const field = IKHTISAR_EDIT_FIELDS[session.fieldIndex];
@@ -1284,7 +1291,7 @@ bot.on('message', async (msg) => {
             delete sessions[cid];
         }
     } else if (text === '📅 Open Calendar') { bot.sendMessage(cid, '📅 *Pilih Tanggal:*', { parse_mode: 'Markdown', reply_markup: createCalendarKeyboard(new Date().getFullYear(), new Date().getMonth()) }); }
-    if (text === '❌ Cancel') { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Operasi Dibatalkan.*', { parse_mode: 'Markdown', ...mainMenu() }); }
+    if (text === '❌ Cancel') { delete sessions[cid]; return bot.sendMessage(cid, '❌ *Operasi Dibatalkan.*', { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) }); }
     if (text === '❌ Close') { delete sessions[cid]; return bot.sendMessage(cid, '🔒 *Budi Closed.* Sampai jumpa!', { reply_markup: { remove_keyboard: true } }); }
 });
 
