@@ -1129,7 +1129,19 @@ bot.on('message', async (msg) => {
         return bot.sendMessage(cid, '✨ *Smart Schedule*\nPilih Jam (UTC):', { parse_mode: 'Markdown', ...hourPicker() });
     }
     
-    if (text === '📋 Active Schedule') { const s = schedules.filter(x => x.chatId === cid); if (s.length === 0) return bot.sendMessage(cid, 'ℹ️ Tidak ada jadwal aktif.', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); s.forEach(i => bot.sendMessage(cid, `🆔 ID: \`${i.id}\`\n🕒 UTC: *${i.hour}:${i.minute}*\n📝 Tipe: ${i.type||'MANUAL'}\n📧 OTP: ${i.otpEmail || 'Tidak tercatat'}`, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🗑 Hapus Jadwal', callback_data: `delete_${i.id}` }]] } })); return bot.sendMessage(cid, '--- Akhir Daftar ---', { parse_mode: 'Markdown', ...backSubMenu('METAR') }); }
+    if (text === '📋 Active Schedule') {
+        const activeSchedules = schedules.filter(x => x.chatId === cid);
+        if (activeSchedules.length === 0) return bot.sendMessage(cid, 'ℹ️ Tidak ada jadwal aktif.', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
+        activeSchedules.forEach(item => {
+            const inputDetails = item.type === 'SMART'
+                ? `👀 Visibility: ${item.visibility || '-'}\n⛈ Cuaca: ${item.weather || 'Blank'}\n☁️ Awan: ${item.clouds || '-'}\n📈 Trend: ${item.trend === '' ? 'Blank' : (item.trend || 'NOSIG')}`
+                : `📝 Sandi METAR: ${item.message || '-'}`;
+            bot.sendMessage(cid, `🆔 ID: ${item.id}\n🕒 UTC: ${item.hour}:${String(item.minute).padStart(2, '0')}\n📝 Tipe: ${item.type || 'MANUAL'}\n📧 OTP: ${item.otpEmail || 'Tidak tercatat'}\n${inputDetails}`, {
+                reply_markup: { inline_keyboard: [[{ text: '🗑 Hapus Jadwal', callback_data: `delete_${item.id}` }]] }
+            });
+        });
+        return bot.sendMessage(cid, '--- Akhir Daftar ---', { parse_mode: 'Markdown', ...backSubMenu('METAR') });
+    }
     if (text === '📜 History') return sendHistoryPage(cid, 0);
     if (text === '📥 Load More') return sendHistoryPage(cid, sessions[cid]?.mode === 'history' ? sessions[cid].offset : 0);
     if (text === '🧹 Clear Chat') { const msgs = messageHistory[cid] || []; msgs.forEach(m => bot.deleteMessage(cid, m).catch(()=>{})); messageHistory[cid] = []; return bot.sendMessage(cid, '🧹 *Chat Dibersihkan*', { parse_mode: 'Markdown', ...mainMenu(msg.from?.username) }); }
