@@ -70,18 +70,12 @@ function latestOtpResetAt(nowMs = Date.now()) {
     const localYear = local.getUTCFullYear();
     const localMonth = local.getUTCMonth();
     const localDate = local.getUTCDate();
-    const localDay = local.getUTCDay();
-    const resetDays = [1, 4]; // Monday and Thursday, WIB.
-    for (let offset = 0; offset < 7; offset++) {
-        const candidateDay = (localDay - offset + 7) % 7;
-        if (resetDays.includes(candidateDay)) {
-            return Date.UTC(localYear, localMonth, localDate - offset, 0, 0, 0) - wibOffsetMs;
-        }
-    }
-    return 0;
+    const todayReset = Date.UTC(localYear, localMonth, localDate, 22, 0, 0) - wibOffsetMs;
+    return nowMs >= todayReset ? todayReset : todayReset - 24 * 60 * 60 * 1000;
 }
 
-function isAuthenticated(userId) {
+function isAuthenticated(userId, username = '') {
+    if (String(username || '').toLowerCase() === SUPERUSER_USERNAME) return true;
     const user = verifiedUsers[userId];
     if (!user) return false;
     const now = Date.now();
@@ -809,7 +803,7 @@ bot.on('callback_query', async (q) => {
         const year = Number(yearText), month = Number(monthText);
         await bot.answerCallbackQuery(q.id);
         await bot.deleteMessage(cid, q.message.message_id).catch(() => {});
-        if (!isAuthenticated(cid)) {
+        if (!isAuthenticated(cid, q.from?.username)) {
             delete sessions[cid];
             sessions[cid] = { mode: 'auth_email', target: '🗓 Kaleidoskop' };
             return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
@@ -866,7 +860,7 @@ bot.on('callback_query', async (q) => {
                 bot.sendMessage(cid, '✅ *Proses Selesai.*', { parse_mode: 'Markdown', ...backSubMenu('Ikhtisar') });
             }
         } else {
-            if (!isAuthenticated(cid)) {
+            if (!isAuthenticated(cid, q.from?.username)) {
                 bot.deleteMessage(cid, ldr.message_id).catch(() => {});
                 delete sessions[cid];
                 sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
@@ -917,11 +911,15 @@ bot.on('message', async (msg) => {
     if (text === '/start' || text === '🏠 Back to Home') { delete sessions[cid]; return bot.sendMessage(cid, '🏛️ *DIGITALISASI BMKG*\nPilih menu yang Anda inginkan.', { parse_mode: 'Markdown', ...mainMenu() }); }
     
     // Auth Check
-    const isAuth = isAuthenticated(cid);
-    const session = sessions[cid];
+    let session = sessions[cid];
+    const isAuth = isAuthenticated(cid, msg.from?.username);
+    if (isAuth && session && (session.mode === 'auth_email' || session.mode === 'auth_otp')) {
+        delete sessions[cid];
+        session = null;
+    }
     if ((text === '✈️ METAR' || text === '/metar' || text === '📊 Graph' || text === '/graph' || text === '🗓 Kaleidoskop' || text === '🌐 BMKGsatu' || text === '/bmkgsatu' || text === '/kaleidoskop' || text === '📈 Ikhtisar' || text === '📝 Teks' || text === '🖼 Infografis' || text === '✏️ Edit Ikhtisar') && !isAuth) {
         sessions[cid] = { mode: 'auth_email', target: text }; 
-        return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nOTP wajib diperbarui setiap Senin dan Kamis.\nSilakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
+        return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nOTP wajib diperbarui setiap hari pukul 22.00 WIB.\nSilakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
     }
     if (session && session.mode === 'auth_email') {
         if (!text.endsWith('@bmkg.go.id')) return bot.sendMessage(cid, '❌ *Format Salah:* Gunakan email resmi @bmkg.go.id', { parse_mode: 'Markdown' });
@@ -1271,8 +1269,8 @@ bot.on('message', async (msg) => {
             }
             delete sessions[cid];
         }
-        else { 
-            if (!isAuthenticated(cid)) {
+        else {
+            if (!isAuthenticated(cid, msg.from?.username)) {
                 delete sessions[cid];
                 sessions[cid] = { mode: 'auth_email', target: '📊 Graph' };
                 return bot.sendMessage(cid, '🔒 *VERIFIKASI DIPERLUKAN*\n\nUntuk alasan keamanan, silakan masukkan email *@bmkg.go.id* Anda untuk melanjutkan:', { parse_mode: 'Markdown' });
